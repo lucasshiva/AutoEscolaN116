@@ -4,7 +4,7 @@ services:
     container_name: auto-escola-n116-db
     environment:
       MYSQL_ROOT_PASSWORD: senai
-      MYSQL_DATABASE: auto_escola_n116
+      MYSQL_DATABASE: auto_escola_n116_test
     ports:
       - "3306:3306"
     volumes:

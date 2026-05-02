@@ -5,8 +5,6 @@ import br.com.senai.autoescola.n116.students.Student;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-
 @Component
 public class CreateStudentHandler implements EndpointHandler<CreateStudentCommand, CreateStudentResponse> {
     private final StudentsRepository studentsRepository;
@@ -17,8 +15,8 @@ public class CreateStudentHandler implements EndpointHandler<CreateStudentComman
 
     @Override
     public CreateStudentResponse handle(CreateStudentCommand cmd) {
-        Student entity = toEntity(cmd);
-        Student student = studentsRepository.save(entity);
+        Student entity = toEntity(cmd); // Manually using `Instant.now()` inside `toEntity(cmd)`.
+        Student student = studentsRepository.save(entity);  // DB should set `createAt`.
         return new CreateStudentResponse(student.getId(), student.getCreatedAt());
     }
 
@@ -30,7 +28,7 @@ public class CreateStudentHandler implements EndpointHandler<CreateStudentComman
                 cmd.telefone(),
                 cmd.endereco(),
                 cmd.cpf(),
-                Instant.now(),
+                null,
                 null,
                 null
         );
