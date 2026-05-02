@@ -1,12 +1,12 @@
 package br.com.senai.autoescola.n116.students.create;
 
-import br.com.senai.autoescola.n116.common.interfaces.EndpointHandler;
+import br.com.senai.autoescola.n116.common.interfaces.IHandler;
 import br.com.senai.autoescola.n116.students.Student;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CreateStudentHandler implements EndpointHandler<CreateStudentRequest, CreateStudentResponse> {
+public class CreateStudentHandler implements IHandler<CreateStudentRequest, CreateStudentResponse> {
     private final StudentsRepository studentsRepository;
 
     public CreateStudentHandler(StudentsRepository studentsRepository) {
@@ -20,15 +20,14 @@ public class CreateStudentHandler implements EndpointHandler<CreateStudentReques
         return new CreateStudentResponse(student.getId(), student.getCreatedAt());
     }
 
-    private Student toEntity(CreateStudentRequest cmd) {
+    private Student toEntity(CreateStudentRequest request) {
         return new Student(
                 null,
-                cmd.nome(),
-                cmd.email(),
-                cmd.telefone(),
-                cmd.endereco(),
-                cmd.cpf(),
-                null,
+                request.nome(),
+                request.email(),
+                request.telefone(),
+                request.endereco(),
+                request.cpf(),
                 null,
                 null
         );
