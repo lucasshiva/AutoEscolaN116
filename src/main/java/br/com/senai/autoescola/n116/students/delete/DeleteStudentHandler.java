@@ -1,6 +1,7 @@
 package br.com.senai.autoescola.n116.students.delete;
 
 import br.com.senai.autoescola.n116.common.interfaces.IHandler;
+import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,11 @@ public class DeleteStudentHandler implements IHandler<DeleteStudentRequest, Void
 
     @Override
     public Void handle(DeleteStudentRequest request) {
-        studentsRepository.deleteById(request.id());
+        var student = studentsRepository
+                .findById(request.id())
+                .orElseThrow(() -> new StudentNotFoundException(request.id()));
+
+        studentsRepository.delete(student);
         return null;
     }
 }

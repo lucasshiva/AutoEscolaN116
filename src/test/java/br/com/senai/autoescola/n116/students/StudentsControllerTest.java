@@ -151,5 +151,12 @@ class StudentsControllerTest {
             // But the row is still there.
             assertThat(deletedAt).isNotNull();
         }
+
+        @Test
+        @DisplayName("Returns a 404 Not Found when the ID doesn't exist.")
+        public void missingId() {
+            var response = testClient.delete().uri("/students/{id}", 1).exchange();
+            response.expectStatus().isNotFound();
+        }
     }
 }
