@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,6 +18,7 @@ public class Address {
     private String logradouro;
 
     @Column(name = "endereco_numero")
+    @Pattern(regexp = "\\d+")
     private String numero;
 
     @Column(name = "endereco_complemento")
@@ -28,12 +28,11 @@ public class Address {
     @NotBlank
     private String cidade;
 
-    @Column(name = "endereco_cep", unique = true)
-    @Pattern(regexp = "\\d{8}")
+    @Column(name = "endereco_cep")
+    @Pattern(regexp = "\\d{8}", message = "must be exactly 8 digits")
     private String cep;
 
     @Column(name = "endereco_uf", length = 2)
-    @Size(min = 2, max = 2)
     @Pattern(regexp = "[A-Z]{2}")
     private String uf;
 }

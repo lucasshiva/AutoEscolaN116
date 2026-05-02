@@ -1,16 +1,18 @@
 package br.com.senai.autoescola.n116.utils;
 
 import br.com.senai.autoescola.n116.common.models.Address;
+import org.instancio.Instancio;
+import org.instancio.InstancioApi;
+
+import static org.instancio.Select.field;
 
 public class AddressBuilder {
-    private final String logradouro = "Rua Passos";
-    private final String numero = "650";
-    private final String complemento = "Casa 2";
-    private final String cidade = "Vila Nova";
-    private final String cep = "05060789";
-    private final String uf = "SP";
+    private final InstancioApi<Address> api = Instancio.of(Address.class)
+            .generate(field(Address::getCep), gen -> gen.string().digits().length(8))
+            .generate(field(Address::getUf), gen -> gen.string().upperCase().length(2))
+            .generate(field(Address::getNumero), gen -> gen.string().digits().minLength(1));
 
     public Address build() {
-        return new Address(logradouro, numero, complemento, cidade, cep, uf);
+        return api.create();
     }
 }

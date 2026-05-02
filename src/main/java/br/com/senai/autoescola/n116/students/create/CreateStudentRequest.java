@@ -14,12 +14,10 @@ public record CreateStudentRequest(
         @Email(message = "the provided email address is invalid")
         String email,
 
-        @NotBlank
-        @Pattern(regexp = "\\d{11}$", message = "must be exactly 11 digits")
+        @Pattern(regexp = "\\d{11}", message = "must be exactly 11 digits")
         String telefone,
 
-        @NotBlank
-        @Pattern(regexp = "\\d{11}$", message = "must be exactly 11 digits")
+        @Pattern(regexp = "\\d{11}", message = "must be exactly 11 digits")
         String cpf,
 
         @NotNull

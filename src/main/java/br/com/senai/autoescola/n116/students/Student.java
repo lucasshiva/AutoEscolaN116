@@ -2,7 +2,7 @@ package br.com.senai.autoescola.n116.students;
 
 import br.com.senai.autoescola.n116.common.models.Address;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -28,15 +28,18 @@ public class Student {
     private Long id;
 
     private String nome;
+
+    @Email
     private String email;
+
+    @Pattern(regexp = "\\d{11}", message = "must be exactly 11 digits")
     private String telefone;
 
     @Embedded
     private Address endereco;
 
     @Column(nullable = false, unique = true)
-    @Pattern(regexp = "\\d{11}")
-    @Digits(integer = 11, fraction = 0)
+    @Pattern(regexp = "\\d{11}", message = "must be exactly 11 digits")
     private String cpf;
 
     @Column(name = "created_at", updatable = false, insertable = false)

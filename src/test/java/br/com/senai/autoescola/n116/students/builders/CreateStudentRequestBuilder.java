@@ -4,14 +4,13 @@ import br.com.senai.autoescola.n116.common.models.Address;
 import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
 import org.instancio.Instancio;
 import org.instancio.InstancioApi;
-import org.instancio.settings.Keys;
 
 import static org.instancio.Select.field;
 
 public class CreateStudentRequestBuilder {
     private InstancioApi<CreateStudentRequest> api = Instancio.of(CreateStudentRequest.class)
-            .withSetting(Keys.BEAN_VALIDATION_ENABLED, true)
-            .withSetting(Keys.JPA_ENABLED, true);
+            .generate(field(CreateStudentRequest::cpf), gen -> gen.string().digits().length(11))
+            .generate(field(CreateStudentRequest::telefone), gen -> gen.string().digits().length(11));
 
     public CreateStudentRequestBuilder withName(String name) {
         api = api.set(field(CreateStudentRequest::nome), name);
