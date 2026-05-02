@@ -1,7 +1,7 @@
 package br.com.senai.autoescola.n116.students;
 
-import br.com.senai.autoescola.n116.students.create.CreateStudentCommand;
 import br.com.senai.autoescola.n116.students.create.CreateStudentHandler;
+import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
 import br.com.senai.autoescola.n116.students.create.CreateStudentResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
@@ -25,7 +25,7 @@ public class StudentsController {
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateStudentResponse> create(
-            @RequestBody @Valid CreateStudentCommand cmd,
+            @RequestBody @Valid CreateStudentRequest cmd,
             UriComponentsBuilder uriBuilder
     ) {
         var response = createStudentHandler.handle(cmd);

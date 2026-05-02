@@ -2,8 +2,8 @@ package br.com.senai.autoescola.n116.students;
 
 
 import br.com.senai.autoescola.n116.common.errors.GlobalExceptionHandler;
-import br.com.senai.autoescola.n116.students.builders.CreateStudentCommandBuilder;
-import br.com.senai.autoescola.n116.students.create.CreateStudentCommand;
+import br.com.senai.autoescola.n116.students.builders.CreateStudentRequestBuilder;
+import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
 import br.com.senai.autoescola.n116.students.create.CreateStudentResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ class StudentsControllerTest {
 
     @Test
     void shouldCreateUserWithValidDTO() {
-        var command = new CreateStudentCommandBuilder().build();
+        var command = new CreateStudentRequestBuilder().build();
 
         var result = testClient.post().uri("/students").body(command).exchange();
 
@@ -59,7 +59,7 @@ class StudentsControllerTest {
     @ValueSource(strings = {"12345", "123456789012345"})
     void shouldRejectInvalidCPFLength(String cpf) {
         assertSingleValidationError(
-                new CreateStudentCommandBuilder().withCpf(cpf).build(),
+                new CreateStudentRequestBuilder().withCpf(cpf).build(),
                 "cpf", "must be exactly 11 digits"
         );
     }
@@ -71,7 +71,7 @@ class StudentsControllerTest {
     })
     void shouldRejectInvalidPhoneLength(String phone) {
         assertSingleValidationError(
-                new CreateStudentCommandBuilder().withPhone(phone).build(),
+                new CreateStudentRequestBuilder().withPhone(phone).build(),
                 "telefone", "must be exactly 11 digits"
         );
     }
@@ -79,7 +79,7 @@ class StudentsControllerTest {
     @Test
     void shouldRejectInvalidEmail() {
         assertSingleValidationError(
-                new CreateStudentCommandBuilder().withEmail("wrongEmail").build(),
+                new CreateStudentRequestBuilder().withEmail("wrongEmail").build(),
                 "email", "the provided email address is invalid"
         );
     }
@@ -87,7 +87,7 @@ class StudentsControllerTest {
     @Test
     void shouldRejectWithMissingAddress() {
         assertSingleValidationError(
-                new CreateStudentCommandBuilder().withAddress(null).build(),
+                new CreateStudentRequestBuilder().withAddress(null).build(),
                 "endereco", "must not be null"
         );
     }
@@ -96,13 +96,13 @@ class StudentsControllerTest {
     @NullAndEmptySource
     void shouldRejectEmptyOrBlankName(String name) {
         assertSingleValidationError(
-                new CreateStudentCommandBuilder().withName(name).build(),
+                new CreateStudentRequestBuilder().withName(name).build(),
                 "nome", "must not be blank"
         );
     }
 
     private void assertSingleValidationError(
-            CreateStudentCommand command, String expectedField, String expectedMessage) {
+            CreateStudentRequest command, String expectedField, String expectedMessage) {
         var response = testClient.post().uri("/students").body(command).exchange();
         response.expectStatus().isBadRequest();
         response.expectBody(GlobalExceptionHandler.ValidationErrorResponse.class).value(body -> {
