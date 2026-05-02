@@ -3,9 +3,9 @@ package br.com.senai.autoescola.n116.students;
 
 import br.com.senai.autoescola.n116.common.errors.GlobalExceptionHandler;
 import br.com.senai.autoescola.n116.students.builders.CreateStudentRequestBuilder;
+import br.com.senai.autoescola.n116.students.builders.StudentBuilder;
 import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
 import br.com.senai.autoescola.n116.students.create.CreateStudentResponse;
-import br.com.senai.autoescola.n116.students.factories.StudentFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -131,7 +131,7 @@ class StudentsControllerTest {
         @Test
         @DisplayName("SoftDelete works automatically via Hibernate.")
         public void shouldSoftDelete() {
-            var student = StudentFactory.valid();
+            var student = new StudentBuilder().build();
 
             var saved = studentsRepository.save(student);
 

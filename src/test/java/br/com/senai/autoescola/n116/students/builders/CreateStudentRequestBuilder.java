@@ -2,41 +2,43 @@ package br.com.senai.autoescola.n116.students.builders;
 
 import br.com.senai.autoescola.n116.common.models.Address;
 import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
-import br.com.senai.autoescola.n116.utils.AddressBuilder;
+import org.instancio.Instancio;
+import org.instancio.InstancioApi;
+import org.instancio.settings.Keys;
+
+import static org.instancio.Select.field;
 
 public class CreateStudentRequestBuilder {
-    private String name = "José Silva";
-    private Address address = new AddressBuilder().build();
-    private String phone = "11912341234";
-    private String cpf = "12345678912";
-    private String email = "josesilva@gmail.com";
+    private InstancioApi<CreateStudentRequest> api = Instancio.of(CreateStudentRequest.class)
+            .withSetting(Keys.BEAN_VALIDATION_ENABLED, true)
+            .withSetting(Keys.JPA_ENABLED, true);
 
     public CreateStudentRequestBuilder withName(String name) {
-        this.name = name;
+        api = api.set(field(CreateStudentRequest::nome), name);
         return this;
     }
 
     public CreateStudentRequestBuilder withEmail(String email) {
-        this.email = email;
+        api = api.set(field(CreateStudentRequest::email), email);
         return this;
     }
 
     public CreateStudentRequestBuilder withCpf(String cpf) {
-        this.cpf = cpf;
+        api = api.set(field(CreateStudentRequest::cpf), cpf);
         return this;
     }
 
     public CreateStudentRequestBuilder withPhone(String phone) {
-        this.phone = phone;
+        api = api.set(field(CreateStudentRequest::telefone), phone);
         return this;
     }
 
     public CreateStudentRequestBuilder withAddress(Address address) {
-        this.address = address;
+        api = api.set(field(CreateStudentRequest::endereco), address);
         return this;
     }
 
     public CreateStudentRequest build() {
-        return new CreateStudentRequest(name, email, phone, cpf, address);
+        return api.create();
     }
 }
