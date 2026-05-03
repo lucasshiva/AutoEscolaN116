@@ -5,9 +5,15 @@ import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
 import br.com.senai.autoescola.n116.students.create.CreateStudentResponse;
 import br.com.senai.autoescola.n116.students.delete.DeleteStudentHandler;
 import br.com.senai.autoescola.n116.students.delete.DeleteStudentRequest;
+import br.com.senai.autoescola.n116.students.getById.GetStudentByIdHandler;
+import br.com.senai.autoescola.n116.students.getById.GetStudentByIdRequest;
+import br.com.senai.autoescola.n116.students.getById.GetStudentByIdResponse;
 import br.com.senai.autoescola.n116.students.list.ListStudentsHandler;
 import br.com.senai.autoescola.n116.students.list.ListStudentsRequest;
 import br.com.senai.autoescola.n116.students.list.ListStudentsResponse;
+import br.com.senai.autoescola.n116.students.update.UpdateStudentHandler;
+import br.com.senai.autoescola.n116.students.update.UpdateStudentRequest;
+import br.com.senai.autoescola.n116.students.update.UpdateStudentResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -24,15 +30,21 @@ public class StudentsController {
     private final CreateStudentHandler createStudentHandler;
     private final DeleteStudentHandler deleteStudentHandler;
     private final ListStudentsHandler listStudentsHandler;
+    private final GetStudentByIdHandler getStudentByIdHandler;
+    private final UpdateStudentHandler updateStudentHandler;
 
     public StudentsController(
             CreateStudentHandler createStudentHandler,
             DeleteStudentHandler deleteStudentHandler,
-            ListStudentsHandler listStudentsHandler
+            ListStudentsHandler listStudentsHandler,
+            GetStudentByIdHandler getStudentByIdHandler,
+            UpdateStudentHandler updateStudentHandler
     ) {
         this.createStudentHandler = createStudentHandler;
         this.deleteStudentHandler = deleteStudentHandler;
         this.listStudentsHandler = listStudentsHandler;
+        this.getStudentByIdHandler = getStudentByIdHandler;
+        this.updateStudentHandler = updateStudentHandler;
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -57,6 +69,21 @@ public class StudentsController {
     @GetMapping
     public ResponseEntity<ListStudentsResponse> findAll(@PageableDefault Pageable pageable) {
         var result = listStudentsHandler.handle(new ListStudentsRequest(pageable));
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<GetStudentByIdResponse> findById(@PathVariable Long id) {
+        var result = getStudentByIdHandler.handle(new GetStudentByIdRequest(id));
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("{id}")
+    public ResponseEntity<UpdateStudentResponse> update(
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateStudentRequest request
+    ) {
+        var result = updateStudentHandler.handle(id, request);
         return ResponseEntity.ok(result);
     }
 }

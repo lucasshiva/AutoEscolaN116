@@ -4,9 +4,13 @@ package br.com.senai.autoescola.n116.students;
 import br.com.senai.autoescola.n116.common.errors.GlobalExceptionHandler;
 import br.com.senai.autoescola.n116.students.builders.CreateStudentRequestBuilder;
 import br.com.senai.autoescola.n116.students.builders.StudentBuilder;
+import br.com.senai.autoescola.n116.students.builders.UpdateStudentRequestBuilder;
 import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
 import br.com.senai.autoescola.n116.students.create.CreateStudentResponse;
+import br.com.senai.autoescola.n116.students.getById.GetStudentByIdResponse;
 import br.com.senai.autoescola.n116.students.list.ListStudentsResponse;
+import br.com.senai.autoescola.n116.students.update.UpdateStudentRequest;
+import br.com.senai.autoescola.n116.students.update.UpdateStudentResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -46,21 +50,21 @@ class StudentsControllerTest {
         jdbcTemplate.execute("TRUNCATE TABLE students");
     }
 
-    private void assertSingleValidationError(
-            CreateStudentRequest command, String expectedField, String expectedMessage) {
-        var response = testClient.post().uri("/students").body(command).exchange();
-        response.expectStatus().isBadRequest();
-        response.expectBody(GlobalExceptionHandler.ValidationErrorResponse.class).value(body -> {
-            assertThat(body).isNotNull();
-            assertThat(body.errors()).hasSize(1);
-            var error = body.errors().getFirst();
-            assertThat(error.field()).isEqualTo(expectedField);
-            assertThat(error.message()).isEqualTo(expectedMessage);
-        });
-    }
-
     @Nested
     class CreateStudent {
+        private void assertSingleValidationError(
+                CreateStudentRequest command, String expectedField, String expectedMessage) {
+            var response = testClient.post().uri("/students").body(command).exchange();
+            response.expectStatus().isBadRequest();
+            response.expectBody(GlobalExceptionHandler.ValidationErrorResponse.class).value(body -> {
+                assertThat(body).isNotNull();
+                assertThat(body.errors()).hasSize(1);
+                var error = body.errors().getFirst();
+                assertThat(error.field()).isEqualTo(expectedField);
+                assertThat(error.message()).isEqualTo(expectedMessage);
+            });
+        }
+
         @Test
         void shouldCreateUserWithValidDTO() {
             var command = new CreateStudentRequestBuilder().build();
@@ -243,6 +247,98 @@ class StudentsControllerTest {
                         assertThat(body.page()).isOne();
                         assertThat(body.size()).isEqualTo(10);
                     });
+        }
+    }
+
+    @Nested
+    class GetStudent {
+        @Test
+        public void shouldReturnCorrectStudent() {
+            var builder = new StudentBuilder();
+            Student student = builder.build();
+            studentsRepository.save(student);
+
+            testClient.get().uri("/students/{id}", student.getId()).exchange()
+                    .expectStatus().isOk()
+                    .expectBody(GetStudentByIdResponse.class)
+                    .value(body -> {
+                        assertThat(body).isNotNull();
+                        assertThat(body.id()).isEqualTo(student.getId());
+                    });
+        }
+
+        @Test
+        public void shouldNotFindStudent() {
+            testClient.get().uri("/students/{id}", 1).exchange().expectStatus().isNotFound();
+        }
+    }
+
+    @Nested
+    class EditStudent {
+        private void assertSingleValidationError(
+                UpdateStudentRequest request, int id, String expectedField, String expectedMessage
+        ) {
+            var response = testClient.put().uri("/students/{id}", id).body(request).exchange();
+            response.expectStatus().isBadRequest();
+            response.expectBody(GlobalExceptionHandler.ValidationErrorResponse.class).value(body -> {
+                assertThat(body).isNotNull();
+                assertThat(body.errors()).hasSize(1);
+                var error = body.errors().getFirst();
+                assertThat(error.field()).isEqualTo(expectedField);
+                assertThat(error.message()).isEqualTo(expectedMessage);
+            });
+        }
+
+        @Test
+        public void shouldEditStudent() {
+            var student = new StudentBuilder().build();
+            var request = new UpdateStudentRequestBuilder().build();
+
+            studentsRepository.save(student);
+            var response = testClient.put().uri("/students/{id}", student.getId()).body(request).exchange();
+            response.expectStatus().isOk();
+
+            response.expectBody(UpdateStudentResponse.class).value(body -> {
+                assertThat(body).isNotNull();
+                // Check if we're returning the body correctly.
+                assertThat(request)
+                        .usingRecursiveComparison()
+                        .comparingOnlyFields("nome", "telefone", "endereco")
+                        .isEqualTo(body);
+
+                // Check if we're persisting changes correctly.
+                var opt = studentsRepository.findById(student.getId());
+                if (opt.isEmpty())
+                    throw new RuntimeException("Could not find student in repository");
+
+                var persisted = opt.get();
+                assertThat(request)
+                        .usingRecursiveComparison()
+                        .comparingOnlyFields("nome", "telefone", "endereco")
+                        .isEqualTo(persisted);
+            });
+        }
+
+
+        @ParameterizedTest
+        @ValueSource(strings = {"123", "1232132144242"})
+        public void shouldRejectTelefoneWithWrongLength(String telefone) {
+            var request = new UpdateStudentRequestBuilder().withTelefone(telefone).build();
+            assertSingleValidationError(request, 1, "telefone", "must be exactly 11 digits");
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        public void shouldRejectEmptyOrBlankName(String nome) {
+            var request = new UpdateStudentRequestBuilder().withNome(nome).build();
+            assertSingleValidationError(request, 1, "nome", "must not be blank");
+
+        }
+
+        @Test
+        public void shouldRejectMissingAddress() {
+            var request = new UpdateStudentRequestBuilder().withEndereco(null).build();
+            assertSingleValidationError(request, 1, "endereco", "must not be null");
         }
     }
 }

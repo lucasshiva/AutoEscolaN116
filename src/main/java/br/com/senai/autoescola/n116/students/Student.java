@@ -1,6 +1,7 @@
 package br.com.senai.autoescola.n116.students;
 
 import br.com.senai.autoescola.n116.common.models.Address;
+import br.com.senai.autoescola.n116.students.update.UpdateStudentRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
@@ -49,4 +50,10 @@ public class Student {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private Instant updatedAt = null;
+
+    public void update(UpdateStudentRequest request) {
+        this.nome = request.nome();
+        this.telefone = request.telefone();
+        this.endereco = request.endereco();
+    }
 }
