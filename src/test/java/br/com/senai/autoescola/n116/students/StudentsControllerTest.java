@@ -6,6 +6,7 @@ import br.com.senai.autoescola.n116.students.builders.CreateStudentRequestBuilde
 import br.com.senai.autoescola.n116.students.builders.StudentBuilder;
 import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
 import br.com.senai.autoescola.n116.students.create.CreateStudentResponse;
+import br.com.senai.autoescola.n116.students.list.ListStudentsResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -21,6 +22,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -157,6 +160,89 @@ class StudentsControllerTest {
         public void missingId() {
             var response = testClient.delete().uri("/students/{id}", 1).exchange();
             response.expectStatus().isNotFound();
+        }
+    }
+
+    @Nested
+    class ListStudents {
+        @Test
+        public void emptyList() {
+            testClient.get().uri("/students").exchange()
+                    .expectStatus().isOk()
+                    .expectBody(ListStudentsResponse.class)
+                    .value(body -> {
+                        assertThat(body).isNotNull();
+                        assertThat(body.data()).isEmpty();
+                        assertThat(body.totalPages()).isZero();
+                        assertThat(body.totalElements()).isZero();
+                    });
+        }
+
+        @Test
+        public void shouldReturnAllStudents() {
+            var builder = new StudentBuilder();
+            studentsRepository.saveAll(List.of(
+                    builder.build(),
+                    builder.build(),
+                    builder.build()
+            ));
+
+            testClient.get().uri("/students").exchange()
+                    .expectStatus().isOk()
+                    .expectBody(ListStudentsResponse.class)
+                    .value(body -> {
+                        assertThat(body).isNotNull();
+                        assertThat(body.data()).hasSize(3);
+                        assertThat(body.totalPages()).isOne();
+                        assertThat(body.totalElements()).isEqualTo(3);
+                    });
+        }
+
+        @Test
+        void shouldNotIncludeDeletedStudents() {
+            var builder = new StudentBuilder();
+            Student first = builder.build();
+            Student second = builder.build();
+
+            studentsRepository.saveAll(List.of(
+                    first,
+                    second
+            ));
+
+            // Delete first student
+            testClient.delete().uri("/students/{id}", first.getId()).exchange();
+
+            // Ensure we only have one student in the response
+            testClient.get().uri("/students").exchange()
+                    .expectStatus().isOk()
+                    .expectBody(ListStudentsResponse.class)
+                    .value(body -> {
+                        assertThat(body).isNotNull();
+                        assertThat(body.data()).hasSize(1);
+                        assertThat(body.totalElements()).isEqualTo(1);
+                    });
+        }
+
+        @Test
+        void shouldReturnCorrectPaginationMetadata() {
+            var builder = new StudentBuilder();
+            studentsRepository.saveAll(
+                    Stream.generate(builder::build)
+                            .limit(15)
+                            .toList()
+            );
+
+            testClient.get().uri("/students?page=1&size=10").exchange()
+                    .expectStatus().isOk()
+                    .expectBody(ListStudentsResponse.class)
+                    .value(body -> {
+                        assertThat(body).isNotNull();
+                        assertThat(body.data()).hasSize(10);
+                        assertThat(body.totalElements()).isEqualTo(15);
+                        assertThat(body.totalPages()).isEqualTo(2);
+                        assertThat(body.page()).isOne();
+                        assertThat(body.size()).isEqualTo(10);
+                    });
         }
     }
 }
