@@ -13,8 +13,8 @@ public class CreateStudentHandler {
     }
 
     public CreateStudentResponse handle(CreateStudentRequest cmd) {
-        Student entity = toEntity(cmd); // Manually using `Instant.now()` inside `toEntity(cmd)`.
-        Student student = studentsRepository.save(entity);  // DB should set `createAt`.
+        Student entity = toEntity(cmd);
+        Student student = studentsRepository.save(entity);
         return new CreateStudentResponse(student.getId(), student.getCreatedAt());
     }
 

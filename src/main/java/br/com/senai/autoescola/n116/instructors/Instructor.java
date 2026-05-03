@@ -1,9 +1,9 @@
-package br.com.senai.autoescola.n116.students;
+package br.com.senai.autoescola.n116.instructors;
 
-import br.com.senai.autoescola.n116.common.annotations.CPF;
+import br.com.senai.autoescola.n116.common.annotations.CNH;
 import br.com.senai.autoescola.n116.common.annotations.Telefone;
 import br.com.senai.autoescola.n116.common.models.Address;
-import br.com.senai.autoescola.n116.students.update.UpdateStudentRequest;
+import br.com.senai.autoescola.n116.common.models.Category;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -18,13 +18,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Instant;
 
 @Entity
-@Table(name = "students")
+@Table(name = "instructors")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @EqualsAndHashCode(of = "id")
 @SoftDelete(columnName = "deleted_at", strategy = SoftDeleteType.TIMESTAMP)
-public class Student {
+public class Instructor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -37,12 +37,15 @@ public class Student {
     @Telefone
     private String telefone;
 
+    @Column(unique = true, length = 10)
+    @CNH
+    private String cnh;
+
+    @Enumerated(EnumType.STRING)
+    private Category especialidade;
+
     @Embedded
     private Address endereco;
-
-    @Column(nullable = false, unique = true)
-    @CPF
-    private String cpf;
 
     @Column(name = "created_at", updatable = false, insertable = false)
     @CreationTimestamp
@@ -51,10 +54,4 @@ public class Student {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private Instant updatedAt = null;
-
-    public void update(UpdateStudentRequest request) {
-        this.nome = request.nome();
-        this.telefone = request.telefone();
-        this.endereco = request.endereco();
-    }
 }
