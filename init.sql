@@ -1,0 +1,2 @@
+CREATE DATABASE IF NOT EXISTS auto_escola_n116_test;
+CREATE DATABASE IF NOT EXISTS auto_escola_n116_dev;
