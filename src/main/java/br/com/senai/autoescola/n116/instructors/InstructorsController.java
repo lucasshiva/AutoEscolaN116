@@ -3,10 +3,16 @@ package br.com.senai.autoescola.n116.instructors;
 import br.com.senai.autoescola.n116.instructors.create.CreateInstructorHandler;
 import br.com.senai.autoescola.n116.instructors.create.CreateInstructorRequest;
 import br.com.senai.autoescola.n116.instructors.create.CreateInstructorResponse;
+import br.com.senai.autoescola.n116.instructors.delete.DeleteInstructorHandler;
 import br.com.senai.autoescola.n116.instructors.getById.GetInstructorByIdHandler;
 import br.com.senai.autoescola.n116.instructors.getById.GetInstructorByIdRequest;
 import br.com.senai.autoescola.n116.instructors.getById.GetInstructorByIdResponse;
+import br.com.senai.autoescola.n116.instructors.list.ListInstructorsHandler;
+import br.com.senai.autoescola.n116.instructors.list.ListInstructorsRequest;
+import br.com.senai.autoescola.n116.instructors.list.ListInstructorsResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,12 +25,19 @@ import java.net.URI;
 public class InstructorsController {
     private final CreateInstructorHandler createInstructorHandler;
     private final GetInstructorByIdHandler getInstructorByIdHandler;
+    private final DeleteInstructorHandler deleteInstructorHandler;
+    private final ListInstructorsHandler listInstructorsHandler;
 
     public InstructorsController(
             CreateInstructorHandler createInstructorHandler,
-            GetInstructorByIdHandler getInstructorByIdHandler) {
+            GetInstructorByIdHandler getInstructorByIdHandler,
+            DeleteInstructorHandler deleteInstructorHandler,
+            ListInstructorsHandler listInstructorsHandler
+    ) {
         this.createInstructorHandler = createInstructorHandler;
         this.getInstructorByIdHandler = getInstructorByIdHandler;
+        this.deleteInstructorHandler = deleteInstructorHandler;
+        this.listInstructorsHandler = listInstructorsHandler;
     }
 
     @PostMapping(
@@ -47,5 +60,17 @@ public class InstructorsController {
     public ResponseEntity<GetInstructorByIdResponse> getById(@PathVariable Long id) {
         var response = getInstructorByIdHandler.handle(new GetInstructorByIdRequest(id));
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<ListInstructorsResponse> findAll(@PageableDefault Pageable pageable) {
+        var result = listInstructorsHandler.handle(new ListInstructorsRequest(pageable));
+        return ResponseEntity.ok(result);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+        deleteInstructorHandler.handle(id);
+        return ResponseEntity.noContent().build();
     }
 }

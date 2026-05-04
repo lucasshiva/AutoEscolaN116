@@ -10,7 +10,7 @@ public class AddressBuilder {
     private final InstancioApi<Address> api = Instancio.of(Address.class)
             .generate(field(Address::getCep), gen -> gen.string().digits().length(8))
             .generate(field(Address::getUf), gen -> gen.string().upperCase().length(2))
-            .generate(field(Address::getNumero), gen -> gen.string().digits().minLength(1));
+            .generate(field(Address::getNumero), gen -> gen.string().digits().minLength(1).maxLength(3));
 
     public Address build() {
         return api.create();
