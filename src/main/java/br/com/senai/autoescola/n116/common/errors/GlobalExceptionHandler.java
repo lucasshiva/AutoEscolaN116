@@ -1,6 +1,7 @@
 package br.com.senai.autoescola.n116.common.errors;
 
 import br.com.senai.autoescola.n116.instructors.DuplicateCnhException;
+import br.com.senai.autoescola.n116.instructors.InstructorNotFoundException;
 import br.com.senai.autoescola.n116.students.DuplicateCpfException;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ValidationErrorResponse(errors));
     }
 
-    @ExceptionHandler(StudentNotFoundException.class)
+    @ExceptionHandler({StudentNotFoundException.class, InstructorNotFoundException.class})
     public ResponseEntity<Void> handleStudentNotFound() {
         return ResponseEntity.notFound().build();
     }

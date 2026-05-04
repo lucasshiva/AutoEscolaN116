@@ -1,7 +1,9 @@
 package br.com.senai.autoescola.n116.instructors;
 
 import br.com.senai.autoescola.n116.instructors.builders.CreateInstructorRequestBuilder;
+import br.com.senai.autoescola.n116.instructors.builders.InstructorBuilder;
 import br.com.senai.autoescola.n116.instructors.create.CreateInstructorResponse;
+import br.com.senai.autoescola.n116.instructors.getById.GetInstructorByIdResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -94,6 +96,29 @@ class InstructorsControllerTest {
         @NullAndEmptySource
         void shouldRejectEmptyOrBlankName(String name) {
             assertValidationError("nome", spec.body(requestBuilder.withName(name).build()));
+        }
+    }
+
+    @Nested
+    class GetInstructor {
+        @Test
+        public void shouldReturnCorrectInstructor() {
+            var builder = new InstructorBuilder();
+            Instructor instructor = builder.build();
+            instructorsRepository.save(instructor);
+
+            testClient.get().uri("/instructors/{id}", instructor.getId()).exchange()
+                    .expectStatus().isOk()
+                    .expectBody(GetInstructorByIdResponse.class)
+                    .value(body -> {
+                        assertThat(body).isNotNull();
+                        assertThat(body.id()).isEqualTo(instructor.getId());
+                    });
+        }
+
+        @Test
+        public void shouldNotFindInstructor() {
+            testClient.get().uri("/instructors/{id}", 1).exchange().expectStatus().isNotFound();
         }
     }
 
