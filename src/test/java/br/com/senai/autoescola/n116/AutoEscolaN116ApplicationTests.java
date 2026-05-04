@@ -1,5 +1,6 @@
 package br.com.senai.autoescola.n116;
 
+import br.com.senai.autoescola.n116.instructors.InstructorsController;
 import br.com.senai.autoescola.n116.students.StudentsController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +14,12 @@ class AutoEscolaN116ApplicationTests {
     @Autowired
     private StudentsController studentsController;
 
+    @Autowired
+    private InstructorsController instructorsController;
+
     @Test
     void contextLoads() {
         assertThat(studentsController).isNotNull();
+        assertThat(instructorsController).isNotNull();
     }
 }

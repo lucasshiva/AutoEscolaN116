@@ -3,7 +3,7 @@ package br.com.senai.autoescola.n116.instructors;
 import br.com.senai.autoescola.n116.common.annotations.CNH;
 import br.com.senai.autoescola.n116.common.annotations.Telefone;
 import br.com.senai.autoescola.n116.common.models.Address;
-import br.com.senai.autoescola.n116.common.models.Category;
+import br.com.senai.autoescola.n116.common.models.Especialidade;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -42,7 +42,7 @@ public class Instructor {
     private String cnh;
 
     @Enumerated(EnumType.STRING)
-    private Category especialidade;
+    private Especialidade especialidade;
 
     @Embedded
     private Address endereco;

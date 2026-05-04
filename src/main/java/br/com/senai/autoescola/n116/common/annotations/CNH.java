@@ -2,7 +2,6 @@ package br.com.senai.autoescola.n116.common.annotations;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Pattern;
 
 import java.lang.annotation.ElementType;
@@ -11,7 +10,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Pattern(regexp = "\\d{10}", message = "must be exactly 10 digits")
-@Digits(integer = 10, fraction = 0)
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = {})

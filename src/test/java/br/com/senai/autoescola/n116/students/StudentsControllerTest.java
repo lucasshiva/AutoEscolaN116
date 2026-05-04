@@ -5,7 +5,6 @@ import br.com.senai.autoescola.n116.common.errors.GlobalExceptionHandler;
 import br.com.senai.autoescola.n116.students.builders.CreateStudentRequestBuilder;
 import br.com.senai.autoescola.n116.students.builders.StudentBuilder;
 import br.com.senai.autoescola.n116.students.builders.UpdateStudentRequestBuilder;
-import br.com.senai.autoescola.n116.students.create.CreateStudentRequest;
 import br.com.senai.autoescola.n116.students.create.CreateStudentResponse;
 import br.com.senai.autoescola.n116.students.getById.GetStudentByIdResponse;
 import br.com.senai.autoescola.n116.students.list.ListStudentsResponse;
@@ -29,6 +28,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static br.com.senai.autoescola.n116.utils.ControllerTestUtils.assertCreatedWithTimestamp;
+import static br.com.senai.autoescola.n116.utils.ControllerTestUtils.assertValidationError;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -52,47 +53,26 @@ class StudentsControllerTest {
 
     @Nested
     class CreateStudent {
-        private void assertSingleValidationError(
-                CreateStudentRequest command, String expectedField, String expectedMessage) {
-            var response = testClient.post().uri("/students").body(command).exchange();
-            response.expectStatus().isBadRequest();
-            response.expectBody(GlobalExceptionHandler.ValidationErrorResponse.class).value(body -> {
-                assertThat(body).isNotNull();
-                assertThat(body.errors()).hasSize(1);
-                var error = body.errors().getFirst();
-                assertThat(error.field()).isEqualTo(expectedField);
-                assertThat(error.message()).isEqualTo(expectedMessage);
-            });
-        }
+        private final CreateStudentRequestBuilder requestBuilder =
+                new CreateStudentRequestBuilder();
+
+        private final RestTestClient.RequestBodySpec spec = testClient.post().uri("/students");
 
         @Test
-        void shouldCreateUserWithValidDTO() {
-            var command = new CreateStudentRequestBuilder().build();
-
-            var result = testClient.post().uri("/students").body(command).exchange();
-
-            result.expectStatus().isCreated();
-            result
-                    .expectBody(CreateStudentResponse.class)
-                    .value(body -> {
-                        assertThat(body).isNotNull();
-                        assertThat(body.createdAt())
-                                .isInstanceOf(Instant.class)
-                                .isBefore(Instant.now())
-                                .isAfter(Instant.now().minusSeconds(5));
-                        assertThat(body.id()).isNotNull();
-                        assertThat(studentsRepository.findById(body.id())).isPresent();
-                    });
-
+        void shouldCreateStudentWithValidPayload() {
+            var request = requestBuilder.build();
+            assertCreatedWithTimestamp(
+                    spec.body(request),
+                    CreateStudentResponse.class,
+                    CreateStudentResponse::createdAt,
+                    body -> assertThat(studentsRepository.findById(body.id())).isPresent()
+            );
         }
 
         @ParameterizedTest
         @ValueSource(strings = {"12345", "123456789012345"})
         void shouldRejectInvalidCPFLength(String cpf) {
-            assertSingleValidationError(
-                    new CreateStudentRequestBuilder().withCpf(cpf).build(),
-                    "cpf", "must be exactly 11 digits"
-            );
+            assertValidationError("cpf", spec.body(requestBuilder.withCpf(cpf).build()));
         }
 
         @ParameterizedTest
@@ -100,36 +80,24 @@ class StudentsControllerTest {
                 "12345",
                 "123456789012345"
         })
-        void shouldRejectInvalidPhoneLength(String phone) {
-            assertSingleValidationError(
-                    new CreateStudentRequestBuilder().withPhone(phone).build(),
-                    "telefone", "must be exactly 11 digits"
-            );
+        void shouldRejectInvalidTelefoneLength(String telefone) {
+            assertValidationError("telefone", spec.body(requestBuilder.withTelefone(telefone).build()));
         }
 
         @Test
         void shouldRejectInvalidEmail() {
-            assertSingleValidationError(
-                    new CreateStudentRequestBuilder().withEmail("wrongEmail").build(),
-                    "email", "the provided email address is invalid"
-            );
+            assertValidationError("email", spec.body(requestBuilder.withEmail("invalidEmail").build()));
         }
 
         @Test
         void shouldRejectWithMissingAddress() {
-            assertSingleValidationError(
-                    new CreateStudentRequestBuilder().withAddress(null).build(),
-                    "endereco", "must not be null"
-            );
+            assertValidationError("endereco", spec.body(requestBuilder.withAddress(null).build()));
         }
 
         @ParameterizedTest
         @NullAndEmptySource
-        void shouldRejectEmptyOrBlankName(String name) {
-            assertSingleValidationError(
-                    new CreateStudentRequestBuilder().withName(name).build(),
-                    "nome", "must not be blank"
-            );
+        void shouldRejectEmptyOrBlankName(String nome) {
+            assertValidationError("nome", spec.body(requestBuilder.withName(nome).build()));
         }
     }
 
