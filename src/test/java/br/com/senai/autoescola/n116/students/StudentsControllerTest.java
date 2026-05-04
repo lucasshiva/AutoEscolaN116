@@ -22,6 +22,7 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTe
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
@@ -268,6 +269,7 @@ class StudentsControllerTest {
         }
 
         @Test
+        @WithMockUser(roles = "ADMIN")
         public void shouldEditStudent() {
             var student = new StudentBuilder().build();
             var request = new UpdateStudentRequestBuilder().build();

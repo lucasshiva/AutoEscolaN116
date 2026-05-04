@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -48,6 +49,7 @@ public class StudentsController {
     }
 
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<CreateStudentResponse> create(
             @RequestBody @Valid CreateStudentRequest request,
             UriComponentsBuilder uriBuilder
@@ -61,24 +63,28 @@ public class StudentsController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<Void> softDelete(@PathVariable Long id) {
         deleteStudentHandler.handle(new DeleteStudentRequest(id));
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ListStudentsResponse> findAll(@PageableDefault Pageable pageable) {
         var result = listStudentsHandler.handle(new ListStudentsRequest(pageable));
         return ResponseEntity.ok(result);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<GetStudentByIdResponse> findById(@PathVariable Long id) {
         var result = getStudentByIdHandler.handle(new GetStudentByIdRequest(id));
         return ResponseEntity.ok(result);
     }
 
     @PutMapping("{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<UpdateStudentResponse> update(
             @PathVariable Long id,
             @RequestBody @Valid UpdateStudentRequest request

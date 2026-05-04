@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -50,6 +51,7 @@ public class InstructorsController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<CreateInstructorResponse> createNew(
             @RequestBody @Valid CreateInstructorRequest request,
             UriComponentsBuilder uriBuilder
@@ -63,24 +65,28 @@ public class InstructorsController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<GetInstructorByIdResponse> getById(@PathVariable Long id) {
         var response = getInstructorByIdHandler.handle(new GetInstructorByIdRequest(id));
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<ListInstructorsResponse> findAll(@PageableDefault Pageable pageable) {
         var result = listInstructorsHandler.handle(new ListInstructorsRequest(pageable));
         return ResponseEntity.ok(result);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         deleteInstructorHandler.handle(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<UpdateInstructorResponse> update(
             @PathVariable Long id,
             @RequestBody @Valid UpdateInstructorRequest request
