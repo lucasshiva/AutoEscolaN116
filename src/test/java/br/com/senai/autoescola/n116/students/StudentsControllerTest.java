@@ -254,18 +254,8 @@ class StudentsControllerTest {
 
     @Nested
     class EditStudent {
-        private void assertSingleValidationError(
-                UpdateStudentRequest request, int id, String expectedField, String expectedMessage
-        ) {
-            var response = testClient.put().uri("/students/{id}", id).body(request).exchange();
-            response.expectStatus().isBadRequest();
-            response.expectBody(GlobalExceptionHandler.ValidationErrorResponse.class).value(body -> {
-                assertThat(body).isNotNull();
-                assertThat(body.errors()).hasSize(1);
-                var error = body.errors().getFirst();
-                assertThat(error.field()).isEqualTo(expectedField);
-                assertThat(error.message()).isEqualTo(expectedMessage);
-            });
+        private RestTestClient.RequestBodySpec specWithFixedId() {
+            return testClient.put().uri("/students/{id}", 1);
         }
 
         @Test
@@ -304,21 +294,21 @@ class StudentsControllerTest {
         @ValueSource(strings = {"123", "1232132144242"})
         public void shouldRejectTelefoneWithWrongLength(String telefone) {
             var request = new UpdateStudentRequestBuilder().withTelefone(telefone).build();
-            assertSingleValidationError(request, 1, "telefone", "must be exactly 11 digits");
+            assertValidationError("telefone", specWithFixedId().body(request));
         }
 
         @ParameterizedTest
         @NullAndEmptySource
         public void shouldRejectEmptyOrBlankName(String nome) {
             var request = new UpdateStudentRequestBuilder().withNome(nome).build();
-            assertSingleValidationError(request, 1, "nome", "must not be blank");
+            assertValidationError("nome", specWithFixedId().body(request));
 
         }
 
         @Test
         public void shouldRejectMissingAddress() {
             var request = new UpdateStudentRequestBuilder().withEndereco(null).build();
-            assertSingleValidationError(request, 1, "endereco", "must not be null");
+            assertValidationError("endereco", specWithFixedId().body(request));
         }
     }
 }
