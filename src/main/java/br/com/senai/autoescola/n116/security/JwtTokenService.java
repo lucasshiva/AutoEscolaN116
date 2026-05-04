@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Date;
 
 @Service
 public class JwtTokenService {
@@ -27,6 +28,16 @@ public class JwtTokenService {
                 .withSubject(user.getUsername())
                 .withExpiresAt(getExpirationDate())
                 .sign(algorithm);
+    }
+
+    public boolean isTokenValidForLogin(String token, String login) {
+        String subject = getSubjectFromToken(token);
+        return subject.equals(login) && !isTokenExpired(token);
+    }
+
+    public boolean isTokenExpired(String token) {
+        var decoded = JWT.decode(token);
+        return decoded.getExpiresAt().before(new Date());
     }
 
     public String getSubjectFromToken(String token) {

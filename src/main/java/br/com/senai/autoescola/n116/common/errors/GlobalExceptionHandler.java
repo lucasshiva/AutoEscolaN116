@@ -1,5 +1,6 @@
 package br.com.senai.autoescola.n116.common.errors;
 
+import br.com.senai.autoescola.n116.auth.UserAlreadyExistsException;
 import br.com.senai.autoescola.n116.instructors.DuplicateCnhException;
 import br.com.senai.autoescola.n116.instructors.InstructorNotFoundException;
 import br.com.senai.autoescola.n116.students.DuplicateCpfException;
@@ -44,6 +45,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(Map.of("status", HttpStatus.UNAUTHORIZED, "message", "Invalid credentials"));
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(Map.of("status", HttpStatus.CONFLICT, "message", ex.getMessage()));
     }
 
     public record ValidationErrorResponse(List<ValidationError> errors) {

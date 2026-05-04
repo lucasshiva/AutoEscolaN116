@@ -2,12 +2,17 @@ package br.com.senai.autoescola.n116.auth;
 
 import br.com.senai.autoescola.n116.auth.login.AuthLoginRequest;
 import br.com.senai.autoescola.n116.auth.login.AuthLoginResponse;
+import br.com.senai.autoescola.n116.auth.register.AuthRegisterRequest;
+import br.com.senai.autoescola.n116.auth.register.AuthRegisterResponse;
+import br.com.senai.autoescola.n116.security.JwtTokenService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -24,10 +29,15 @@ class AuthControllerTest {
 
     @Autowired
     private RestTestClient testClient;
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtTokenService tokenService;
 
     @BeforeEach
     void setUp() {
@@ -79,6 +89,38 @@ class AuthControllerTest {
                     .body(new AuthLoginRequest(normalUserLogin, normalUserPassword))
                     .exchange()
                     .expectStatus().isUnauthorized();
+        }
+    }
+
+    @Nested
+    public class Register {
+        @Test
+        public void shouldRegister() {
+            var request = new AuthRegisterRequest(normalUserLogin, normalUserPassword);
+            testClient.post().uri("/auth/register")
+                    .body(request)
+                    .exchangeSuccessfully()
+                    .expectStatus().isOk()
+                    .expectBody(AuthRegisterResponse.class)
+                    .value(body -> {
+                        assertThat(body).isNotNull();
+                        assertThat(body.token()).isNotBlank();
+                        assertThat(tokenService.isTokenValidForLogin(body.token(), request.login()));
+                    });
+        }
+
+        @Test
+        @DisplayName("Throw an error when trying to register with a login that already exists")
+        public void sameLogin() {
+            jdbcTemplate.update(
+                    "INSERT INTO users (login, senha) VALUES (?, ?)",
+                    normalUserLogin, passwordEncoder.encode(normalUserPassword)
+            );
+            var request = new AuthRegisterRequest(normalUserLogin, "anotherpassword");
+            testClient.post().uri("/auth/register")
+                    .body(request)
+                    .exchange()
+                    .expectStatus().isEqualTo(HttpStatus.CONFLICT);
         }
     }
 }
