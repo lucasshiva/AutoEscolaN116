@@ -1,5 +1,6 @@
 package br.com.senai.autoescola.n116.instructors.create;
 
+import br.com.senai.autoescola.n116.instructors.DuplicateCnhException;
 import br.com.senai.autoescola.n116.instructors.Instructor;
 import br.com.senai.autoescola.n116.instructors.InstructorsRepository;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,10 @@ public class CreateInstructorHandler {
     }
 
     public CreateInstructorResponse handle(CreateInstructorRequest req) {
+        if (repository.existsByCnh(req.cnh())) {
+            throw new DuplicateCnhException(req.cnh());
+        }
+
         var instructor = toEntity(req);
         var saved = repository.save(instructor);
         return new CreateInstructorResponse(saved.getId(), saved.getNome(), saved.getCreatedAt());

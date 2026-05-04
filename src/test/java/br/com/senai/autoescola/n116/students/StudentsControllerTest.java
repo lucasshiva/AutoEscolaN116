@@ -20,6 +20,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -67,6 +68,15 @@ class StudentsControllerTest {
                     CreateStudentResponse::createdAt,
                     body -> assertThat(studentsRepository.findById(body.id())).isPresent()
             );
+        }
+
+        @Test
+        void shouldRejectDuplicateCPF() {
+            var first = requestBuilder.build();
+            var second = requestBuilder.withCpf(first.cpf()).build();
+
+            spec.body(first).exchange().expectStatus().isCreated();
+            spec.body(second).exchange().expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
         }
 
         @ParameterizedTest

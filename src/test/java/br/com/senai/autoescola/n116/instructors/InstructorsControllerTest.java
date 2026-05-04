@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -45,7 +46,7 @@ class InstructorsControllerTest {
         private final RestTestClient.RequestBodySpec spec = testClient.post().uri("/instructors");
 
         @Test
-        void shouldCreateUserWithValidDTO() {
+        void shouldCreateInstructorWithValidPayload() {
             var request = requestBuilder.build();
             assertCreatedWithTimestamp(
                     spec.body(request),
@@ -56,6 +57,15 @@ class InstructorsControllerTest {
                         assertThat(instructorsRepository.findById(body.id())).isPresent();
                     }
             );
+        }
+
+        @Test
+        void shouldRejectDuplicateCNH() {
+            var firstInstructor = requestBuilder.build();
+            var secondInstructor = requestBuilder.withCnh(firstInstructor.cnh()).build();
+
+            spec.body(firstInstructor).exchange().expectStatus().isCreated();
+            spec.body(secondInstructor).exchange().expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
         }
 
         @ParameterizedTest
