@@ -4,6 +4,7 @@ import br.com.senai.autoescola.n116.common.annotations.CNH;
 import br.com.senai.autoescola.n116.common.annotations.Telefone;
 import br.com.senai.autoescola.n116.common.models.Address;
 import br.com.senai.autoescola.n116.common.models.Especialidade;
+import br.com.senai.autoescola.n116.instructors.update.UpdateInstructorRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -54,4 +55,10 @@ public class Instructor {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private Instant updatedAt = null;
+
+    public void update(UpdateInstructorRequest req) {
+        this.nome = req.nome();
+        this.telefone = req.telefone();
+        this.endereco = req.endereco();
+    }
 }

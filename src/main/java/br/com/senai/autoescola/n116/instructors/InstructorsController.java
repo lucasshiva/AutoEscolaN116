@@ -10,6 +10,9 @@ import br.com.senai.autoescola.n116.instructors.getById.GetInstructorByIdRespons
 import br.com.senai.autoescola.n116.instructors.list.ListInstructorsHandler;
 import br.com.senai.autoescola.n116.instructors.list.ListInstructorsRequest;
 import br.com.senai.autoescola.n116.instructors.list.ListInstructorsResponse;
+import br.com.senai.autoescola.n116.instructors.update.UpdateInstructorHandler;
+import br.com.senai.autoescola.n116.instructors.update.UpdateInstructorRequest;
+import br.com.senai.autoescola.n116.instructors.update.UpdateInstructorResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -27,17 +30,20 @@ public class InstructorsController {
     private final GetInstructorByIdHandler getInstructorByIdHandler;
     private final DeleteInstructorHandler deleteInstructorHandler;
     private final ListInstructorsHandler listInstructorsHandler;
+    private final UpdateInstructorHandler updateInstructorHandler;
 
     public InstructorsController(
             CreateInstructorHandler createInstructorHandler,
             GetInstructorByIdHandler getInstructorByIdHandler,
             DeleteInstructorHandler deleteInstructorHandler,
-            ListInstructorsHandler listInstructorsHandler
+            ListInstructorsHandler listInstructorsHandler,
+            UpdateInstructorHandler updateInstructorHandler
     ) {
         this.createInstructorHandler = createInstructorHandler;
         this.getInstructorByIdHandler = getInstructorByIdHandler;
         this.deleteInstructorHandler = deleteInstructorHandler;
         this.listInstructorsHandler = listInstructorsHandler;
+        this.updateInstructorHandler = updateInstructorHandler;
     }
 
     @PostMapping(
@@ -72,5 +78,14 @@ public class InstructorsController {
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         deleteInstructorHandler.handle(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UpdateInstructorResponse> update(
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateInstructorRequest request
+    ) {
+        var result = updateInstructorHandler.handle(id, request);
+        return ResponseEntity.ok(result);
     }
 }

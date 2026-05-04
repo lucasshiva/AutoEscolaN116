@@ -2,9 +2,11 @@ package br.com.senai.autoescola.n116.instructors;
 
 import br.com.senai.autoescola.n116.instructors.builders.CreateInstructorRequestBuilder;
 import br.com.senai.autoescola.n116.instructors.builders.InstructorBuilder;
+import br.com.senai.autoescola.n116.instructors.builders.UpdateInstructorRequestBuilder;
 import br.com.senai.autoescola.n116.instructors.create.CreateInstructorResponse;
 import br.com.senai.autoescola.n116.instructors.getById.GetInstructorByIdResponse;
 import br.com.senai.autoescola.n116.instructors.list.ListInstructorsResponse;
+import br.com.senai.autoescola.n116.instructors.update.UpdateInstructorResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -242,6 +244,63 @@ class InstructorsControllerTest {
                         assertThat(body.page()).isOne();
                         assertThat(body.size()).isEqualTo(10);
                     });
+        }
+    }
+
+    @Nested
+    class EditInstructor {
+        private final RestTestClient.RequestBodySpec specWithFixedId = testClient.put().uri("/instructors/{id}", 1);
+
+        @Test
+        public void shouldEditInstructor() {
+            var instructor = new InstructorBuilder().build();
+            var request = new UpdateInstructorRequestBuilder().build();
+
+            instructorsRepository.save(instructor);
+            var response = testClient.put().uri("/instructors/{id}", instructor.getId()).body(request).exchange();
+            response.expectStatus().isOk();
+
+            response.expectBody(UpdateInstructorResponse.class).value(body -> {
+                assertThat(body).isNotNull();
+                // Check if we're returning the body correctly.
+                assertThat(request)
+                        .usingRecursiveComparison()
+                        .comparingOnlyFields("nome", "telefone", "endereco")
+                        .isEqualTo(body);
+
+                // Check if we're persisting changes correctly.
+                var opt = instructorsRepository.findById(instructor.getId());
+                if (opt.isEmpty())
+                    throw new RuntimeException("Could not find instructor in repository");
+
+                var persisted = opt.get();
+                assertThat(request)
+                        .usingRecursiveComparison()
+                        .comparingOnlyFields("nome", "telefone", "endereco")
+                        .isEqualTo(persisted);
+            });
+        }
+
+
+        @ParameterizedTest
+        @ValueSource(strings = {"123", "1232132144242"})
+        public void shouldRejectTelefoneWithWrongLength(String telefone) {
+            var request = new UpdateInstructorRequestBuilder().withTelefone(telefone).build();
+            assertValidationError("telefone", specWithFixedId.body(request));
+        }
+
+        @ParameterizedTest
+        @NullAndEmptySource
+        public void shouldRejectEmptyOrBlankName(String nome) {
+            var request = new UpdateInstructorRequestBuilder().withNome(nome).build();
+            assertValidationError("nome", specWithFixedId.body(request));
+
+        }
+
+        @Test
+        public void shouldRejectMissingAddress() {
+            var request = new UpdateInstructorRequestBuilder().withEndereco(null).build();
+            assertValidationError("endereco", specWithFixedId.body(request));
         }
     }
 }
