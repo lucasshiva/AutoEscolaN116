@@ -1,7 +1,5 @@
 package br.com.senai.autoescola.n116.security;
 
-import br.com.senai.autoescola.n116.auth.CustomAccessDeniedHandler;
-import br.com.senai.autoescola.n116.auth.CustomAuthEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -23,17 +21,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Profile("!test")
 public class SecurityConfig {
     private final JWTSecurityFilter securityFilter;
-    private final CustomAuthEntryPoint authEntryPoint;
-    private final CustomAccessDeniedHandler accessDeniedHandler;
 
-    public SecurityConfig(
-            JWTSecurityFilter securityFilter,
-            CustomAuthEntryPoint authEntryPoint,
-            CustomAccessDeniedHandler accessDeniedHandler
-    ) {
+    public SecurityConfig(JWTSecurityFilter securityFilter) {
         this.securityFilter = securityFilter;
-        this.authEntryPoint = authEntryPoint;
-        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
@@ -42,11 +32,8 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/docs", "/scalar").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/scalar/**", "/swagger-ui.html/**").permitAll()
                         .anyRequest().authenticated())
-                .exceptionHandling(e -> e
-                        .authenticationEntryPoint(authEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler))
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
