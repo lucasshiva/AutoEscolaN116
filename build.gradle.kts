@@ -26,6 +26,7 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-scalar:2.8.17")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("com.auth0:java-jwt:4.5.1")
+    implementation("org.flywaydb:flyway-mysql")
     compileOnly("org.projectlombok:lombok")
     compileOnly("org.flywaydb:flyway-mysql")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
