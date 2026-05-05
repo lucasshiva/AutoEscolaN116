@@ -1,5 +1,6 @@
 package br.com.senai.autoescola.n116.instructors;
 
+import br.com.senai.autoescola.n116.IntegrationTestBase;
 import br.com.senai.autoescola.n116.instructors.builders.CreateInstructorRequestBuilder;
 import br.com.senai.autoescola.n116.instructors.builders.InstructorBuilder;
 import br.com.senai.autoescola.n116.instructors.builders.UpdateInstructorRequestBuilder;
@@ -7,7 +8,6 @@ import br.com.senai.autoescola.n116.instructors.create.CreateInstructorResponse;
 import br.com.senai.autoescola.n116.instructors.getById.GetInstructorByIdResponse;
 import br.com.senai.autoescola.n116.instructors.list.ListInstructorsResponse;
 import br.com.senai.autoescola.n116.instructors.update.UpdateInstructorResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -15,11 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.Instant;
@@ -30,23 +26,9 @@ import static br.com.senai.autoescola.n116.utils.ControllerTestUtils.assertCreat
 import static br.com.senai.autoescola.n116.utils.ControllerTestUtils.assertValidationError;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureRestTestClient
-@ActiveProfiles("test")
-class InstructorsControllerTest {
+class InstructorsControllerTest extends IntegrationTestBase {
     @Autowired
     private InstructorsRepository instructorsRepository;
-
-    @Autowired
-    private RestTestClient testClient;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @BeforeEach
-    void setUp() {
-        jdbcTemplate.execute("TRUNCATE TABLE instructors");
-    }
 
     @Nested
     class CreateInstructor {

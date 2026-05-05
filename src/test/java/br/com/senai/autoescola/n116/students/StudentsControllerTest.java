@@ -1,16 +1,14 @@
 package br.com.senai.autoescola.n116.students;
 
 
-import br.com.senai.autoescola.n116.common.errors.GlobalExceptionHandler;
+import br.com.senai.autoescola.n116.IntegrationTestBase;
 import br.com.senai.autoescola.n116.students.builders.CreateStudentRequestBuilder;
 import br.com.senai.autoescola.n116.students.builders.StudentBuilder;
 import br.com.senai.autoescola.n116.students.builders.UpdateStudentRequestBuilder;
 import br.com.senai.autoescola.n116.students.create.CreateStudentResponse;
 import br.com.senai.autoescola.n116.students.getById.GetStudentByIdResponse;
 import br.com.senai.autoescola.n116.students.list.ListStudentsResponse;
-import br.com.senai.autoescola.n116.students.update.UpdateStudentRequest;
 import br.com.senai.autoescola.n116.students.update.UpdateStudentResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,12 +16,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.Instant;
@@ -34,24 +28,9 @@ import static br.com.senai.autoescola.n116.utils.ControllerTestUtils.assertCreat
 import static br.com.senai.autoescola.n116.utils.ControllerTestUtils.assertValidationError;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureRestTestClient
-@ActiveProfiles("test")
-class StudentsControllerTest {
-    @Autowired
-    private RestTestClient testClient;
-
+class StudentsControllerTest extends IntegrationTestBase {
     @Autowired
     private StudentsRepository studentsRepository;
-
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @BeforeEach
-    void setUp() {
-        // Ensure we're not ignoring soft-deleted records.
-        jdbcTemplate.execute("TRUNCATE TABLE students");
-    }
 
     @Nested
     class CreateStudent {
