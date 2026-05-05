@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:8.1
+    image: mysql:8
     container_name: auto-escola-n116-db
     environment:
       MYSQL_ROOT_PASSWORD: senai
