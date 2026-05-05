@@ -1,5 +1,7 @@
 package br.com.senai.autoescola.n116.security;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,14 +41,31 @@ public class JWTSecurityFilter extends OncePerRequestFilter {
 
         String jwtToken = getTokenFromRequest(request);
         if (jwtToken == null || jwtToken.isBlank()) {
-            filterChain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"error\": \"Missing token\"}");
             return;
         }
 
-        String subject = tokenService.getSubjectFromToken(jwtToken);
-        UserDetails user = userDetailsService.loadUserByUsername(subject);
-        var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            String subject = tokenService.getSubjectFromToken(jwtToken);
+            UserDetails user = userDetailsService.loadUserByUsername(subject);
+            var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        } catch (TokenExpiredException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"error\": \"Token has expired\"}");
+            return;
+        } catch (JWTVerificationException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"error\": \"Invalid token\"}");
+            return;
+        }
 
         filterChain.doFilter(request, response);
     }

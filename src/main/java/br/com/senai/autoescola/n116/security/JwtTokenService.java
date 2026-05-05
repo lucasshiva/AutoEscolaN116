@@ -15,7 +15,6 @@ import java.util.Date;
 public class JwtTokenService {
     private final String issuer = "Auto Escola N116";
 
-
     private final Algorithm algorithm;
 
     public JwtTokenService(@Value("${api.security.token.secret}") String secret) {
