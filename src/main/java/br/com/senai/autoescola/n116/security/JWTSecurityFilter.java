@@ -41,10 +41,7 @@ public class JWTSecurityFilter extends OncePerRequestFilter {
 
         String jwtToken = getTokenFromRequest(request);
         if (jwtToken == null || jwtToken.isBlank()) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"error\": \"Missing token\"}");
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -54,16 +51,12 @@ public class JWTSecurityFilter extends OncePerRequestFilter {
             var authentication = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (TokenExpiredException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"error\": \"Token has expired\"}");
+            IO.println("Token has expired");
+            setTokenExpiredMessage(response);
             return;
         } catch (JWTVerificationException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"error\": \"Invalid token\"}");
+            IO.println("Invalid token");
+            setTokenInvalidMessage(response);
             return;
         }
 
@@ -74,5 +67,19 @@ public class JWTSecurityFilter extends OncePerRequestFilter {
         var header = request.getHeader("Authorization");
         if (header == null) return null;
         return header.replace("Bearer ", "");
+    }
+
+    private void setTokenExpiredMessage(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"error\": \"Token has expired\"}");
+    }
+
+    private void setTokenInvalidMessage(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"error\": \"Invalid token\"}");
     }
 }
