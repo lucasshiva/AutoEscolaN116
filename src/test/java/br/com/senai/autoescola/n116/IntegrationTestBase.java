@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @AutoConfigureRestTestClient
-public class IntegrationTestBase {
+public abstract class IntegrationTestBase {
     @Autowired
     public JdbcTemplate jdbcTemplate;
 
