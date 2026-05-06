@@ -3,6 +3,7 @@ package br.com.senai.autoescola.n116.common.errors;
 import br.com.senai.autoescola.n116.auth.UserAlreadyExistsException;
 import br.com.senai.autoescola.n116.instructors.DuplicateCnhException;
 import br.com.senai.autoescola.n116.instructors.InstructorNotFoundException;
+import br.com.senai.autoescola.n116.lessons.schedule.exceptions.ScheduleInvalidDayException;
 import br.com.senai.autoescola.n116.students.DuplicateCpfException;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidationErrors(
-            MethodArgumentNotValidException ex) {
+            MethodArgumentNotValidException ex
+    ) {
         var errors = ex
                 .getFieldErrors()
                 .stream()
@@ -52,6 +54,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(Map.of("status", HttpStatus.CONFLICT, "message", ex.getMessage()));
+    }
+
+    // Schedule errors
+    @ExceptionHandler({ScheduleInvalidDayException.class})
+    public ResponseEntity<Map<String, Object>> handleScheduleExceptions(RuntimeException ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
     }
 
     public record ValidationErrorResponse(List<ValidationError> errors) {
