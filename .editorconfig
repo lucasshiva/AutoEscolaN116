@@ -6,6 +6,7 @@ end_of_line = lf
 insert_final_newline = false
 tab_width = 4
 trim_trailing_whitespace = true
+continuation_indent_size = 8
 
 [*.java]
 indent_style = tab
@@ -25,3 +26,4 @@ ij_java_call_parameters_wrap = on_every_item
 ij_java_method_call_chain_wrap = on_every_item
 ij_java_align_multiline_chained_methods = true
 ij_java_align_multiline_parameters_in_calls = true
+ij_java_spaces_around_equality_operators = true

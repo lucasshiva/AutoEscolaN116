@@ -7,10 +7,7 @@ import br.com.senai.autoescola.n116.common.models.Especialidade;
 import br.com.senai.autoescola.n116.instructors.update.UpdateInstructorRequest;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
@@ -23,42 +20,43 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@With
 @EqualsAndHashCode(of = "id")
 @SoftDelete(columnName = "deleted_at", strategy = SoftDeleteType.TIMESTAMP)
 public class Instructor {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    private String nome;
+	private String nome;
 
-    @Email
-    private String email;
+	@Email
+	private String email;
 
-    @Telefone
-    private String telefone;
+	@Telefone
+	private String telefone;
 
-    @Column(unique = true, length = 10)
-    @CNH
-    private String cnh;
+	@Column(unique = true, length = 10)
+	@CNH
+	private String cnh;
 
-    @Enumerated(EnumType.STRING)
-    private Especialidade especialidade;
+	@Enumerated(EnumType.STRING)
+	private Especialidade especialidade;
 
-    @Embedded
-    private Address endereco;
+	@Embedded
+	private Address endereco;
 
-    @Column(name = "created_at", updatable = false, insertable = false)
-    @CreationTimestamp
-    private Instant createdAt;
+	@Column(name = "created_at", updatable = false, insertable = false)
+	@CreationTimestamp
+	private Instant createdAt;
 
-    @Column(name = "updated_at")
-    @UpdateTimestamp
-    private Instant updatedAt = null;
+	@Column(name = "updated_at")
+	@UpdateTimestamp
+	private Instant updatedAt = null;
 
-    public void update(UpdateInstructorRequest req) {
-        this.nome = req.nome();
-        this.telefone = req.telefone();
-        this.endereco = req.endereco();
-    }
+	public void update(UpdateInstructorRequest req) {
+		this.nome = req.nome();
+		this.telefone = req.telefone();
+		this.endereco = req.endereco();
+	}
 }

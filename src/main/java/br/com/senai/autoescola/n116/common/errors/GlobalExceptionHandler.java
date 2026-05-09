@@ -3,8 +3,7 @@ package br.com.senai.autoescola.n116.common.errors;
 import br.com.senai.autoescola.n116.auth.UserAlreadyExistsException;
 import br.com.senai.autoescola.n116.instructors.DuplicateCnhException;
 import br.com.senai.autoescola.n116.instructors.InstructorNotFoundException;
-import br.com.senai.autoescola.n116.lessons.schedule.exceptions.ScheduleInvalidDayException;
-import br.com.senai.autoescola.n116.lessons.schedule.exceptions.ScheduleInvalidHourException;
+import br.com.senai.autoescola.n116.lessons.schedule.exceptions.*;
 import br.com.senai.autoescola.n116.students.DuplicateCpfException;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -32,7 +31,10 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.badRequest().body(new ValidationErrorResponse(errors));
 	}
 
-	@ExceptionHandler({StudentNotFoundException.class, InstructorNotFoundException.class})
+	@ExceptionHandler({
+			StudentNotFoundException.class,
+			InstructorNotFoundException.class
+	})
 	public ResponseEntity<Void> handleStudentNotFound() {
 		return ResponseEntity.notFound().build();
 	}
@@ -58,11 +60,19 @@ public class GlobalExceptionHandler {
 	}
 
 	// Schedule errors
-	@ExceptionHandler({ScheduleInvalidDayException.class, ScheduleInvalidHourException.class})
+	@ExceptionHandler({
+			ScheduleInvalidDayException.class,
+			ScheduleInvalidHourException.class,
+			ScheduleFullHourException.class,
+			ScheduleInstructorNotAvailableException.class,
+			ScheduleTooSoonException.class,
+			ScheduleTooManyLessonsException.class,
+			ScheduleLessonNoInstructorsAvailable.class
+	})
 	public ResponseEntity<Map<String, Object>> handleScheduleExceptions(RuntimeException ex) {
 		return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
 	}
-
+	
 	public record ValidationErrorResponse(List<ValidationError> errors) {
 	}
 

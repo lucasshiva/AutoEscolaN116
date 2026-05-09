@@ -13,17 +13,16 @@ import br.com.senai.autoescola.n116.students.Student;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
 @Component
 public class ScheduleLessonHandler {
+
 	public static LocalTime MIN_SCHEDULING_HOUR = LocalTime.of(6, 0);
 	public static LocalTime MAX_SCHEDULING_HOUR = LocalTime.of(20, 0);
 	public static Duration MIN_ADVANCE = Duration.ofMinutes(30);
@@ -34,16 +33,21 @@ public class ScheduleLessonHandler {
 	private final InstructorsRepository instructorsRepository;
 	private final DrivingLessonsRepository lessonsRepository;
 
+	private final Clock clock;
+
 	public ScheduleLessonHandler(
 			StudentsRepository studentsRepository,
 			InstructorsRepository instructorsRepository,
-			DrivingLessonsRepository lessonsRepository
+			DrivingLessonsRepository lessonsRepository,
+			Clock clock
 	) {
 		this.studentsRepository = studentsRepository;
 		this.instructorsRepository = instructorsRepository;
 		this.lessonsRepository = lessonsRepository;
+		this.clock = clock;
 	}
 
+	@Transactional
 	public ScheduleLessonResponse schedule(ScheduleLessonRequest request) {
 		DayOfWeek day = request.date().getDayOfWeek();
 		if (!WORKING_DAYS.contains(day)) {
@@ -56,7 +60,7 @@ public class ScheduleLessonHandler {
 
 		// Check if the scheduled class is at least 30 minutes before current time
 		var scheduled = LocalDateTime.of(request.date(), request.time());
-		var now = LocalDateTime.now();
+		var now = LocalDateTime.now(clock);
 		if (scheduled.isBefore(now.plus(MIN_ADVANCE))) {
 			throw new ScheduleTooSoonException(MIN_ADVANCE.toMinutes());
 		}
@@ -97,13 +101,17 @@ public class ScheduleLessonHandler {
 	}
 
 	private Instructor chooseInstructor(Long instructorId, LessonSchedule schedule, Especialidade category) {
-		if (instructorId==null) {
+		if (instructorId == null) {
 			// Select any available for category.
 			var availableInstructors = lessonsRepository.findAvailableInstructors(
 					category,
 					schedule.getStartHour(),
 					schedule.getEndHour()
 			);
+			return availableInstructors
+					.stream()
+					.findAny()
+					.orElseThrow(ScheduleLessonNoInstructorsAvailable::new);
 		}
 
 		var instructor = instructorsRepository
@@ -128,8 +136,7 @@ public class ScheduleLessonHandler {
 				null,
 				student,
 				instructor,
-				schedule,
-				LessonStatus.SCHEDULED,
+				schedule, LessonStatus.SCHEDULED,
 				null,
 				null,
 				null,

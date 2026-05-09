@@ -2,6 +2,7 @@ package br.com.senai.autoescola.n116.lessons.schedule;
 
 import br.com.senai.autoescola.n116.common.models.Especialidade;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import lombok.With;
 
@@ -10,21 +11,21 @@ import java.time.LocalTime;
 
 @With
 public record ScheduleLessonRequest(
-        @NotNull
-        Long studentId,
+		@NotNull
+		Long studentId,
 
-        // Not needed
-        Long instructorId,
+		@Nullable
+		Long instructorId,
 
-        @NotNull
-        Especialidade category,
+		@NotNull
+		Especialidade category,
 
-        @NotNull
-        @JsonFormat(pattern = "yyyy-MM-dd")
-        LocalDate date,
+		@NotNull
+		@JsonFormat(pattern = "yyyy-MM-dd")
+		LocalDate date,
 
-        @NotNull
-        @JsonFormat(pattern = "HH:mm")
-        LocalTime time
+		@NotNull
+		@JsonFormat(pattern = "HH:mm")
+		LocalTime time
 ) {
 }

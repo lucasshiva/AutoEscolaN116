@@ -6,12 +6,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record ScheduleLessonResponse(
-        Long lessonId,
-        Long studentId,
-        Long instructorId,
-        Especialidade category,
-        LocalDate date,
-        LocalTime hourStart,
-        LocalTime hourEnd
+		Long lessonId,
+		Long studentId,
+		Long instructorId,
+		Especialidade category,
+		LocalDate date,
+		LocalTime hourStart,
+		LocalTime hourEnd
 ) {
 }
