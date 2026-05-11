@@ -20,31 +20,34 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @Profile("!test")
 public class SecurityConfig {
-    private final JWTSecurityFilter securityFilter;
+	private final JWTSecurityFilter securityFilter;
 
-    public SecurityConfig(JWTSecurityFilter securityFilter) {
-        this.securityFilter = securityFilter;
-    }
+	public SecurityConfig(JWTSecurityFilter securityFilter) {
+		this.securityFilter = securityFilter;
+	}
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
-        return http.csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(a -> a
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/scalar/**", "/swagger-ui.html/**").permitAll()
-                        .anyRequest().authenticated())
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+		return http.csrf(AbstractHttpConfigurer::disable)
+				   .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				   .authorizeHttpRequests(a -> a
+						   .requestMatchers("/auth/**")
+						   .permitAll()
+						   .requestMatchers("/v3/api-docs/**", "/scalar/**", "/swagger-ui.html/**", "/swagger-ui/**")
+						   .permitAll()
+						   .anyRequest()
+						   .authenticated())
+				   .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+				   .build();
+	}
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) {
-        return config.getAuthenticationManager();
-    }
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) {
+		return config.getAuthenticationManager();
+	}
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 }
