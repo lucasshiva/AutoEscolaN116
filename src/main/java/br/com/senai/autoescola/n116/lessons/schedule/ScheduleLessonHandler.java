@@ -51,18 +51,18 @@ public class ScheduleLessonHandler {
 	public ScheduleLessonResponse schedule(ScheduleLessonRequest request) {
 		DayOfWeek day = request.date().getDayOfWeek();
 		if (!WORKING_DAYS.contains(day)) {
-			throw new ScheduleInvalidDayException();
+			throw new ScheduleOnSundaysException();
 		}
 
 		if (request.time().isBefore(MIN_SCHEDULING_HOUR) || request.time().isAfter(MAX_SCHEDULING_HOUR)) {
-			throw new ScheduleInvalidHourException(request.time(), MIN_SCHEDULING_HOUR, MAX_SCHEDULING_HOUR);
+			throw new ScheduleOutsideOfWorkingHoursException();
 		}
 
 		// Check if the scheduled class is at least 30 minutes before current time
 		var scheduled = LocalDateTime.of(request.date(), request.time());
 		var now = LocalDateTime.now(clock);
 		if (scheduled.isBefore(now.plus(MIN_ADVANCE))) {
-			throw new ScheduleTooSoonException(MIN_ADVANCE.toMinutes());
+			throw new ScheduleMinimumAdvanceException();
 		}
 
 		// Lessons can only happen on full hours
@@ -72,7 +72,7 @@ public class ScheduleLessonHandler {
 
 		// Student cannot have two lessons on the same day
 		if (lessonsRepository.studentAlreadyHasLessonOnDate(request.studentId(), request.date())) {
-			throw new ScheduleTooManyLessonsException();
+			throw new ScheduleTooManyLessonsOnTheSameDayException();
 		}
 
 		LessonSchedule schedule = new LessonSchedule(
@@ -111,7 +111,7 @@ public class ScheduleLessonHandler {
 			return availableInstructors
 					.stream()
 					.findAny()
-					.orElseThrow(ScheduleLessonNoInstructorsAvailable::new);
+					.orElseThrow(ScheduleNoInstructorsAvailableException::new);
 		}
 
 		var instructor = instructorsRepository
@@ -125,7 +125,7 @@ public class ScheduleLessonHandler {
 		);
 
 		if (!isAvailable) {
-			throw new ScheduleInstructorNotAvailableException(instructor.getId());
+			throw new ScheduleInstructorNotAvailableException();
 		}
 
 		return instructor;

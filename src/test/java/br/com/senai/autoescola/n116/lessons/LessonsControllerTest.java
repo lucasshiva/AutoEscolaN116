@@ -3,13 +3,15 @@ package br.com.senai.autoescola.n116.lessons;
 import br.com.senai.autoescola.n116.IntegrationTestBase;
 import br.com.senai.autoescola.n116.common.models.Especialidade;
 import br.com.senai.autoescola.n116.instructors.Instructor;
+import br.com.senai.autoescola.n116.instructors.InstructorNotFoundException;
 import br.com.senai.autoescola.n116.instructors.InstructorsRepository;
 import br.com.senai.autoescola.n116.instructors.builders.InstructorBuilder;
 import br.com.senai.autoescola.n116.lessons.schedule.ScheduleLessonHandler;
 import br.com.senai.autoescola.n116.lessons.schedule.ScheduleLessonRequest;
 import br.com.senai.autoescola.n116.lessons.schedule.ScheduleLessonResponse;
-import br.com.senai.autoescola.n116.lessons.schedule.exceptions.ScheduleInvalidDayException;
+import br.com.senai.autoescola.n116.lessons.schedule.exceptions.*;
 import br.com.senai.autoescola.n116.students.Student;
+import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
 import br.com.senai.autoescola.n116.students.builders.StudentBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.DayOfWeek;
@@ -86,13 +89,11 @@ class LessonsControllerTest extends IntegrationTestBase {
 					.withInstructorId(validInstructor.getId())
 					.withStudentId(validStudent.getId());
 
-			spec.body(request)
-				.exchange()
-				.expectStatus()
-				.isBadRequest()
-				.expectBody()
-				.jsonPath("$.message")
-				.isEqualTo(ScheduleInvalidDayException.message);
+			assertProblemDetailWithCode(
+					spec.body(request),
+					HttpStatus.UNPROCESSABLE_CONTENT,
+					ScheduleOnSundaysException.code
+			);
 		}
 
 		@ParameterizedTest
@@ -104,18 +105,16 @@ class LessonsControllerTest extends IntegrationTestBase {
 					.withInstructorId(validInstructor.getId())
 					.withStudentId(validStudent.getId());
 
-			spec.body(request)
-				.exchange()
-				.expectStatus()
-				.isBadRequest()
-				.expectBody()
-				.jsonPath("$.message")
-				.isEqualTo("Invalid hour '" + invalidHour + "' for schedule time 06:00 ~ 20:00");
+			assertProblemDetailWithCode(
+					spec.body(request),
+					HttpStatus.UNPROCESSABLE_CONTENT,
+					ScheduleOutsideOfWorkingHoursException.code
+			);
 		}
 
 		@Test
 		public void shouldNotScheduleBeforeMinimumAdvanceTime() {
-			// current time: 14:40 (2:40 PM) - based on Clock configuration.
+			// current time: 14:40 (2:40 PM) - based on Clock configuration and America/Sao_Paulo timezone.
 			// try to schedule lesson at 3 PM - only 20 minutes in advance.
 
 			var friday = LocalDate.of(2026, 5, 8);
@@ -127,18 +126,16 @@ class LessonsControllerTest extends IntegrationTestBase {
 					.withStudentId(validStudent.getId())
 					.withInstructorId(validInstructor.getId());
 
-			spec.body(request)
-				.exchange()
-				.expectStatus()
-				.isBadRequest()
-				.expectBody()
-				.jsonPath("$.message")
-				.isEqualTo("You can only schedule lessons with a minimum of " + ScheduleLessonHandler.MIN_ADVANCE.toMinutes() + " minutes in advance");
+			assertProblemDetailWithCode(
+					spec.body(request),
+					HttpStatus.UNPROCESSABLE_CONTENT,
+					ScheduleMinimumAdvanceException.code
+			);
 		}
 
 		@Test
 		public void shouldScheduleAfterMinimumAdvanceTime() {
-			// current time: 14:40 (2:40 PM) - based on Clock configuration.
+			// current time: 14:40 (2:40 PM) - based on Clock configuration and America/Sao_Paulo timezone.
 			// schedule lesson at 4 PM
 
 			var friday = LocalDate.of(2026, 5, 8);
@@ -164,13 +161,11 @@ class LessonsControllerTest extends IntegrationTestBase {
 					.withInstructorId(validInstructor.getId())
 					.withTime(hour);
 
-			spec.body(request)
-				.exchange()
-				.expectStatus()
-				.isBadRequest()
-				.expectBody()
-				.jsonPath("$.message")
-				.isEqualTo("Lessons can only be scheduled in full hours (e.g 8AM, 9AM, etc.)");
+			assertProblemDetailWithCode(
+					spec.body(request),
+					HttpStatus.UNPROCESSABLE_CONTENT,
+					ScheduleFullHourException.code
+			);
 		}
 
 		@Test
@@ -181,13 +176,11 @@ class LessonsControllerTest extends IntegrationTestBase {
 			spec.body(validRequest).exchange().expectStatus().isCreated();
 
 			// Schedule second lesson, same day but a few hours later.
-			spec.body(secondLessonRequest)
-				.exchange()
-				.expectStatus()
-				.isBadRequest()
-				.expectBody()
-				.jsonPath("$.message")
-				.isEqualTo("Students cannot have more than one lesson per day");
+			assertProblemDetailWithCode(
+					spec.body(secondLessonRequest),
+					HttpStatus.UNPROCESSABLE_CONTENT,
+					ScheduleTooManyLessonsOnTheSameDayException.code
+			);
 		}
 
 		@Test
@@ -203,8 +196,15 @@ class LessonsControllerTest extends IntegrationTestBase {
 			spec.body(request).exchange().expectStatus().isCreated();
 
 			// Try to do it again, but for another student.
-			var anotherStudent = validStudent.withId(2L);
-			spec.body(request.withStudentId(anotherStudent.getId())).exchange().expectStatus().isNotFound();
+			var anotherStudent = studentBuilder.build();
+			var savedStudent = studentsRepository.save(anotherStudent);
+			var anotherRequest = request.withStudentId(savedStudent.getId());
+
+			assertProblemDetailWithCode(
+					spec.body(anotherRequest),
+					HttpStatus.UNPROCESSABLE_CONTENT,
+					ScheduleInstructorNotAvailableException.code
+			);
 		}
 
 		@Test
@@ -228,17 +228,15 @@ class LessonsControllerTest extends IntegrationTestBase {
 		@Test
 		public void shouldNotScheduleWhenThereAnyNoAvailableInstructors() {
 			lessonsRepository.save(validLesson);
-			
+
 			var anotherStudent = studentsRepository.save(validStudent.withId(null).withCpf("12345678910"));
 			var request = validRequest.withStudentId(anotherStudent.getId()).withInstructorId(null);
 
-			spec.body(request)
-				.exchange()
-				.expectStatus()
-				.isBadRequest()
-				.expectBody()
-				.jsonPath("$.message")
-				.isEqualTo("There are no instructors available for this driving lesson");
+			assertProblemDetailWithCode(
+					spec.body(request),
+					HttpStatus.UNPROCESSABLE_CONTENT,
+					ScheduleNoInstructorsAvailableException.code
+			);
 		}
 
 		@Test
@@ -248,10 +246,11 @@ class LessonsControllerTest extends IntegrationTestBase {
 					.withStudentId(missingStudent.getId())
 					.withInstructorId(validInstructor.getId());
 
-			spec.body(request)
-				.exchange()
-				.expectStatus()
-				.isNotFound();
+			assertProblemDetailWithCode(
+					spec.body(request),
+					HttpStatus.NOT_FOUND,
+					StudentNotFoundException.code
+			);
 		}
 
 		@Test
@@ -260,7 +259,12 @@ class LessonsControllerTest extends IntegrationTestBase {
 			var request = validRequest
 					.withInstructorId(invalidInstructor.getId())
 					.withStudentId(validStudent.getId());
-			spec.body(request).exchange().expectStatus().isNotFound();
+
+			assertProblemDetailWithCode(
+					spec.body(request),
+					HttpStatus.NOT_FOUND,
+					InstructorNotFoundException.code
+			);
 		}
 	}
 }
