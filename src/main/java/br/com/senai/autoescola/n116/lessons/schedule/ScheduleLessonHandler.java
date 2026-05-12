@@ -9,6 +9,7 @@ import br.com.senai.autoescola.n116.lessons.DrivingLessonsRepository;
 import br.com.senai.autoescola.n116.lessons.LessonSchedule;
 import br.com.senai.autoescola.n116.lessons.LessonStatus;
 import br.com.senai.autoescola.n116.lessons.schedule.exceptions.*;
+import br.com.senai.autoescola.n116.messages.EmailNotificationService;
 import br.com.senai.autoescola.n116.students.Student;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
@@ -34,17 +35,20 @@ public class ScheduleLessonHandler {
 	private final DrivingLessonsRepository lessonsRepository;
 
 	private final Clock clock;
+	private final EmailNotificationService emailNotificationService;
 
 	public ScheduleLessonHandler(
 			StudentsRepository studentsRepository,
 			InstructorsRepository instructorsRepository,
 			DrivingLessonsRepository lessonsRepository,
-			Clock clock
+			Clock clock,
+			EmailNotificationService emailNotificationService
 	) {
 		this.studentsRepository = studentsRepository;
 		this.instructorsRepository = instructorsRepository;
 		this.lessonsRepository = lessonsRepository;
 		this.clock = clock;
+		this.emailNotificationService = emailNotificationService;
 	}
 
 	@Transactional
@@ -89,6 +93,7 @@ public class ScheduleLessonHandler {
 
 		var lesson = createDrivingLesson(student, instructor, schedule);
 		var saved = lessonsRepository.save(lesson);
+		emailNotificationService.sendNotificationForLesson(saved, "scheduled");
 		return new ScheduleLessonResponse(
 				saved.getId(),
 				student.getId(),
