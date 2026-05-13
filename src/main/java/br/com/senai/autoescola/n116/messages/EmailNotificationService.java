@@ -30,14 +30,7 @@ public class EmailNotificationService {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm");
 		LocalDateTime data = LocalDateTime.of(lesson.getSchedule().getDate(), lesson.getSchedule().getStartHour());
 		String formattedDate = data.format(formatter);
-
-
-//		String conteudo = "\nA new driving lesson has been " + action + "!" +
-//				"\nID: " + lesson.getId() +
-//				"\nStudent: " + lesson.getStudent().getNome() +
-//				"\nInstructor: " + lesson.getInstructor().getNome() +
-//				"\nDate: " + formattedDate;
-
+		
 		// Thymeleaf template
 		Context context = new Context();
 		context.setVariable("action", action);
@@ -46,7 +39,8 @@ public class EmailNotificationService {
 		context.setVariable("instructor", lesson.getInstructor().getNome());
 		context.setVariable("date", formattedDate);
 
-		String conteudo = templateEngine.process("driving_lesson_email_context", context);
+		// Same name as html file
+		String conteudo = templateEngine.process("schedule_lesson", context);
 
 		EmailEvent event = new EmailEvent(lesson.getId(), emails, assunto, conteudo);
 		emailEventPublisher.publish(event);
