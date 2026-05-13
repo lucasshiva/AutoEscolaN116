@@ -29,3 +29,6 @@ ij_java_align_multiline_parameters_in_calls = true
 ij_java_spaces_around_equality_operators = true
 ij_java_space_after_colon = true
 ij_java_space_before_colon = true
+
+[*.{html, css}]
+indent_size = 2

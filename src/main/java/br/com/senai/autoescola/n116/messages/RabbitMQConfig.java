@@ -6,6 +6,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.thymeleaf.TemplateEngine;
 
 @Configuration
 public class RabbitMQConfig {
@@ -27,8 +28,10 @@ public class RabbitMQConfig {
 	}
 
 	@Bean
-	public EmailNotificationService emailNotificationService(EmailEventPublisher eventPublisher) {
-		// Call Timeleaf later
-		return new EmailNotificationService(eventPublisher);
+	public EmailNotificationService emailNotificationService(
+			EmailEventPublisher eventPublisher,
+			TemplateEngine templateEngine
+	) {
+		return new EmailNotificationService(eventPublisher, templateEngine);
 	}
 }
