@@ -23,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
@@ -36,6 +37,7 @@ import java.util.concurrent.Callable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@Import(LessonTestRabbitConfig.class)
 class LessonsControllerTest extends IntegrationTestBase {
 
 	private final InstructorBuilder instructorBuilder = new InstructorBuilder();
@@ -52,6 +54,9 @@ class LessonsControllerTest extends IntegrationTestBase {
 
 	@Autowired
 	private RabbitAdmin rabbitAdmin;
+
+	@Autowired
+	private LessonTestRabbitConfig.TestConsumer testConsumer;
 
 	@Autowired
 	private LessonRabbitProperties rabbitProperties;
@@ -171,15 +176,28 @@ class LessonsControllerTest extends IntegrationTestBase {
 		}
 
 		@Test
-		public void shouldSendScheduledMessage() {
-			// TODO: find a way to retrieve the specific event from a rabbitmq queue.
-			spec.body(validRequest).exchange().expectStatus().isCreated();
-			var foundMessage = Awaitility
+		public void shouldSendScheduledMessage() throws InterruptedException {
+			var response = spec
+					.body(validRequest)
+					.exchange()
+					.expectStatus()
+					.isCreated()
+					.expectBody(ScheduleLessonResponse.class)
+					.returnResult()
+					.getResponseBody();
+
+			assertThat(response).isNotNull();
+
+			Awaitility
 					.await()
 					.atMost(Duration.ofSeconds(5))
-					.until(isQueueEmpty(rabbitProperties.queue()), Boolean.TRUE::equals);
-
-			assertThat(foundMessage).isTrue();
+					.untilAsserted(() -> {
+						var events = testConsumer.getEvents();
+						assertThat(events).hasSize(1);
+						var event = events.getFirst();
+						assertThat(event).isNotNull();
+						assertThat(event.lessonId()).isEqualTo(response.lessonId());
+					});
 		}
 
 		@Test
