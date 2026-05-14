@@ -1,4 +1,4 @@
-package br.com.senai.autoescola.n116.lessons.schedule.exceptions;
+package br.com.senai.autoescola.n116.lessons.actions.schedule.exceptions;
 
 import br.com.senai.autoescola.n116.common.errors.ApiException;
 import org.springframework.http.HttpStatus;

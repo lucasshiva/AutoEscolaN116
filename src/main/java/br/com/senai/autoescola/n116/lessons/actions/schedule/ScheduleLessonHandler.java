@@ -1,4 +1,4 @@
-package br.com.senai.autoescola.n116.lessons.schedule;
+package br.com.senai.autoescola.n116.lessons.actions.schedule;
 
 import br.com.senai.autoescola.n116.common.models.Especialidade;
 import br.com.senai.autoescola.n116.instructors.Instructor;
@@ -8,7 +8,9 @@ import br.com.senai.autoescola.n116.lessons.DrivingLesson;
 import br.com.senai.autoescola.n116.lessons.DrivingLessonsRepository;
 import br.com.senai.autoescola.n116.lessons.LessonSchedule;
 import br.com.senai.autoescola.n116.lessons.LessonStatus;
-import br.com.senai.autoescola.n116.lessons.schedule.exceptions.*;
+import br.com.senai.autoescola.n116.lessons.actions.schedule.exceptions.*;
+import br.com.senai.autoescola.n116.lessons.events.LessonScheduledEvent;
+import br.com.senai.autoescola.n116.lessons.messaging.LessonEventPublisher;
 import br.com.senai.autoescola.n116.students.Student;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
@@ -34,17 +36,20 @@ public class ScheduleLessonHandler {
 	private final DrivingLessonsRepository lessonsRepository;
 
 	private final Clock clock;
+	private final LessonEventPublisher lessonEventPublisher;
 
 	public ScheduleLessonHandler(
 			StudentsRepository studentsRepository,
 			InstructorsRepository instructorsRepository,
 			DrivingLessonsRepository lessonsRepository,
-			Clock clock
+			Clock clock,
+			LessonEventPublisher lessonEventPublisher
 	) {
 		this.studentsRepository = studentsRepository;
 		this.instructorsRepository = instructorsRepository;
 		this.lessonsRepository = lessonsRepository;
 		this.clock = clock;
+		this.lessonEventPublisher = lessonEventPublisher;
 	}
 
 	@Transactional
@@ -89,6 +94,15 @@ public class ScheduleLessonHandler {
 
 		var lesson = createDrivingLesson(student, instructor, schedule);
 		var saved = lessonsRepository.save(lesson);
+		var event = new LessonScheduledEvent(
+				saved.getId(),
+				saved.getStudent().getNome(),
+				saved.getStudent().getEmail(),
+				saved.getInstructor().getNome(),
+				saved.getInstructor().getEmail(),
+				LocalDateTime.of(saved.getSchedule().getDate(), saved.getSchedule().getStartHour())
+		);
+		lessonEventPublisher.publishSchedule(event);
 		return new ScheduleLessonResponse(
 				saved.getId(),
 				student.getId(),

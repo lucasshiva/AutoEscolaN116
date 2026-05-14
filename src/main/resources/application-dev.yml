@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/auto_escola_n116_dev
+    username: root
+    password: senai
+    flyway:
+      default-schema: auto_escola_n116_dev
+
+app:
+  rabbit:
+    lesson:
+      exchange: lesson.exchange.dev
+      queue: lesson.queue.dev
+      routing-key: lesson.key.dev

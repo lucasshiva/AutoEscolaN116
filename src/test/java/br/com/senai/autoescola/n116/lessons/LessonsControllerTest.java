@@ -6,27 +6,33 @@ import br.com.senai.autoescola.n116.instructors.Instructor;
 import br.com.senai.autoescola.n116.instructors.InstructorNotFoundException;
 import br.com.senai.autoescola.n116.instructors.InstructorsRepository;
 import br.com.senai.autoescola.n116.instructors.builders.InstructorBuilder;
-import br.com.senai.autoescola.n116.lessons.schedule.ScheduleLessonHandler;
-import br.com.senai.autoescola.n116.lessons.schedule.ScheduleLessonRequest;
-import br.com.senai.autoescola.n116.lessons.schedule.ScheduleLessonResponse;
-import br.com.senai.autoescola.n116.lessons.schedule.exceptions.*;
+import br.com.senai.autoescola.n116.lessons.actions.schedule.ScheduleLessonHandler;
+import br.com.senai.autoescola.n116.lessons.actions.schedule.ScheduleLessonRequest;
+import br.com.senai.autoescola.n116.lessons.actions.schedule.ScheduleLessonResponse;
+import br.com.senai.autoescola.n116.lessons.actions.schedule.exceptions.*;
+import br.com.senai.autoescola.n116.lessons.messaging.LessonRabbitProperties;
 import br.com.senai.autoescola.n116.students.Student;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
 import br.com.senai.autoescola.n116.students.builders.StudentBuilder;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.client.RestTestClient;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Objects;
+import java.util.concurrent.Callable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,6 +50,16 @@ class LessonsControllerTest extends IntegrationTestBase {
 	@Autowired
 	private DrivingLessonsRepository lessonsRepository;
 
+	@Autowired
+	private RabbitAdmin rabbitAdmin;
+
+	@Autowired
+	private LessonRabbitProperties rabbitProperties;
+
+	public Callable<Boolean> isQueueEmpty(String queue) {
+		return () -> Objects.requireNonNull(rabbitAdmin.getQueueInfo(queue)).getMessageCount() == 0;
+	}
+
 	@Nested
 	class ScheduleLessonTest {
 		RestTestClient.RequestBodySpec spec = testClient.post().uri("/lessons");
@@ -52,6 +68,7 @@ class LessonsControllerTest extends IntegrationTestBase {
 		void setup() {
 			instructorsRepository.save(validInstructor);
 			studentsRepository.save(validStudent);
+			rabbitAdmin.purgeQueue(rabbitProperties.queue(), true);
 		}
 
 		ScheduleLessonRequest validRequest = new ScheduleLessonRequest(
@@ -151,6 +168,18 @@ class LessonsControllerTest extends IntegrationTestBase {
 				.exchange()
 				.expectStatus()
 				.isCreated();
+		}
+
+		@Test
+		public void shouldSendScheduledMessage() {
+			// TODO: find a way to retrieve the specific event from a rabbitmq queue.
+			spec.body(validRequest).exchange().expectStatus().isCreated();
+			var foundMessage = Awaitility
+					.await()
+					.atMost(Duration.ofSeconds(5))
+					.until(isQueueEmpty(rabbitProperties.queue()), Boolean.TRUE::equals);
+
+			assertThat(foundMessage).isTrue();
 		}
 
 		@Test

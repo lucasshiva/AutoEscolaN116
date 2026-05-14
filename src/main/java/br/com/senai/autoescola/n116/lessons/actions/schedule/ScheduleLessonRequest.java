@@ -1,4 +1,4 @@
-package br.com.senai.autoescola.n116.lessons.schedule;
+package br.com.senai.autoescola.n116.lessons.actions.schedule;
 
 import br.com.senai.autoescola.n116.common.models.Especialidade;
 import com.fasterxml.jackson.annotation.JsonFormat;

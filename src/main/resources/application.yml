@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: AutoEscolaN116
+
+  profiles:
+    active: "dev"
+
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+
+  mvc:
+    problemdetails:
+      enabled: true
+
+  web:
+    error:
+      include-stacktrace: never
+
+  datasource:
+  # url:
+  # username:
+  # password:
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    connect-retries: 3
+
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true
+
+  # We can use a single rabbitmq instance for both dev and test, but we still use separate queues.
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+server:
+  port: 8080
+
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET:0123456789}
