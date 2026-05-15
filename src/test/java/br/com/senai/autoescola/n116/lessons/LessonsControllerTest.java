@@ -15,6 +15,7 @@ import br.com.senai.autoescola.n116.students.Student;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
 import br.com.senai.autoescola.n116.students.builders.StudentBuilder;
+import com.icegreen.greenmail.spring.GreenMailBean;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -32,12 +33,10 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
-import java.util.Objects;
-import java.util.concurrent.Callable;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Import(LessonTestRabbitConfig.class)
+@Import({LessonTestRabbitConfig.class, LessonTestGreenMailConfig.class})
 class LessonsControllerTest extends IntegrationTestBase {
 
 	private final InstructorBuilder instructorBuilder = new InstructorBuilder();
@@ -61,9 +60,8 @@ class LessonsControllerTest extends IntegrationTestBase {
 	@Autowired
 	private LessonRabbitProperties rabbitProperties;
 
-	public Callable<Boolean> isQueueEmpty(String queue) {
-		return () -> Objects.requireNonNull(rabbitAdmin.getQueueInfo(queue)).getMessageCount() == 0;
-	}
+	@Autowired
+	private GreenMailBean greenMailBean;
 
 	@Nested
 	class ScheduleLessonTest {
@@ -176,7 +174,7 @@ class LessonsControllerTest extends IntegrationTestBase {
 		}
 
 		@Test
-		public void shouldSendScheduledMessage() throws InterruptedException {
+		public void shouldSendScheduledMessage() {
 			var response = spec
 					.body(validRequest)
 					.exchange()
@@ -198,6 +196,32 @@ class LessonsControllerTest extends IntegrationTestBase {
 						assertThat(event).isNotNull();
 						assertThat(event.lessonId()).isEqualTo(response.lessonId());
 					});
+		}
+
+		@Test
+		public void shouldSendEmailAfterScheduling() {
+			var response = spec
+					.body(validRequest)
+					.exchange()
+					.expectStatus()
+					.isCreated()
+					.expectBody(ScheduleLessonResponse.class)
+					.returnResult()
+					.getResponseBody();
+
+			assertThat(response).isNotNull();
+
+			Awaitility
+					.await()
+					.atMost(Duration.ofSeconds(5))
+					.untilAsserted(() -> {
+						var greenMail = greenMailBean.getGreenMail();
+						var messages = greenMail.getReceivedMessages();
+						assertThat(messages).hasSize(2);
+						assertThat(messages[0].getSubject()).isEqualTo("New lesson");
+					});
+
+
 		}
 
 		@Test

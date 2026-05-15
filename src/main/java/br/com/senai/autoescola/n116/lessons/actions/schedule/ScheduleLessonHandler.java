@@ -14,6 +14,7 @@ import br.com.senai.autoescola.n116.lessons.messaging.LessonEventPublisher;
 import br.com.senai.autoescola.n116.students.Student;
 import br.com.senai.autoescola.n116.students.StudentNotFoundException;
 import br.com.senai.autoescola.n116.students.StudentsRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Component
+@RequiredArgsConstructor
 public class ScheduleLessonHandler {
 
 	public static LocalTime MIN_SCHEDULING_HOUR = LocalTime.of(6, 0);
@@ -37,20 +39,6 @@ public class ScheduleLessonHandler {
 
 	private final Clock clock;
 	private final LessonEventPublisher lessonEventPublisher;
-
-	public ScheduleLessonHandler(
-			StudentsRepository studentsRepository,
-			InstructorsRepository instructorsRepository,
-			DrivingLessonsRepository lessonsRepository,
-			Clock clock,
-			LessonEventPublisher lessonEventPublisher
-	) {
-		this.studentsRepository = studentsRepository;
-		this.instructorsRepository = instructorsRepository;
-		this.lessonsRepository = lessonsRepository;
-		this.clock = clock;
-		this.lessonEventPublisher = lessonEventPublisher;
-	}
 
 	@Transactional
 	public ScheduleLessonResponse schedule(ScheduleLessonRequest request) {

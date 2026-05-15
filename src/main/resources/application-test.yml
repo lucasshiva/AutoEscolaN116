@@ -7,7 +7,11 @@ spring:
 
     flyway:
       default-schema: auto_escola_n116_test
-      
+
+  mail:
+    host: localhost
+    port: 3025
+
 app:
   rabbit:
     lesson:

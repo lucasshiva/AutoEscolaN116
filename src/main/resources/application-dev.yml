@@ -6,6 +6,10 @@ spring:
     flyway:
       default-schema: auto_escola_n116_dev
 
+  mail:
+    host: localhost
+    port: 587
+
 app:
   rabbit:
     lesson:
