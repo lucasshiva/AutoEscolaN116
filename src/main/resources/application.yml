@@ -18,9 +18,9 @@ spring:
       include-stacktrace: never
 
   datasource:
-  # url:
-  # username:
-  # password:
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
 
   jpa:
     show-sql: true
@@ -39,23 +39,38 @@ spring:
       pageable:
         one-indexed-parameters: true
 
-  # We can use a single rabbitmq instance for both dev and test, but we still use separate queues.
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-
   mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
     properties:
       "[mail.smtp.connectiontimeout]": 5000
       "[mail.smtp.timeout]": 3000
       "[mail.smtp.writetimeout]": 5000
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 api:
   security:
     token:
-      secret: ${JWT_SECRET:0123456789}
+      secret: ${JWT_SECRET}
+
+logging:
+  level:
+    root: INFO
+    "[springframework.security]": DEBUG
+
+app:
+  rabbit:
+    lesson:
+      exchange: lesson.exchange
+      queue: lesson.scheduled
+      routing-key: lesson.scheduled
